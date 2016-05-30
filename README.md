@@ -1,14 +1,16 @@
 # Slimmer
 
-**A user interface controller program for Logitech Media Server.**
+**A user interface controller software for Logitech Media Server.**
 
-Basically it's a hub between LMS, LCDProc and standard linux keyboard events. For more information visit the Slimmer wiki.
+Basically it's a hub between LMS, LCDProc and standard linux keyboard events. For more information visit the [Slimmer wiki](https://github.com/terba/slimmer/wiki).
+
+![Front](https://github.com/terba/slimmer/wiki/images/front.jpg)
 
 ## Quickstart
 
-For the [PiCorePlayer image](https://sites.google.com/site/picoreplayer/home) running on a Raspberry PI you can download binary packages from here. See the this wiki page for instructions.
+You can download binary packages for the [PiCorePlayer image](https://sites.google.com/site/picoreplayer/home) running on a Raspberry PI from here. See [this wiki page](https://github.com/terba/slimmer/wiki/Building-a-player) for instructions.
 
-## Build
+## How to build
 
 ### Requirements
 
@@ -24,11 +26,11 @@ For the [PiCorePlayer image](https://sites.google.com/site/picoreplayer/home) ru
 git clone https://github.com/terba/slimmer.git
 mkdir slimmer-build
 cd slimmer-build
-cmake ../slimmer
+cmake -DCMAKE_BUILD_TYPE=Release ../slimmer
 make
 ```
 
-After a successfull build you get the executable named *slimmer* in the build directory.
+After a successful build you can find the executable named *slimmer* in the build directory.
 
 ## Usage
 
@@ -95,4 +97,4 @@ To exit from Slimmer press `Ctrl+c`.
 
 ### Run as a daemon
 
-To run Slimmer as a daemon you can use and adapt the init script located in the script folder of the sources.
+To run Slimmer as a daemon you can use and adapt the init script located in the *scripts* folder of the sources.
