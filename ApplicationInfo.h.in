@@ -1,0 +1,10 @@
+#ifndef APPLICATIONINFO_H
+#define APPLICATIONINFO_H
+
+#define APP_NAME "@CMAKE_PROJECT_NAME@"
+#define APP_COPYRIGHT_HOLDER "Terényi, Balázs (terenyi@freemail.hu)"
+#define APP_COPYRIGHT_DATE "2016"
+#define APP_VERSION_NUMBER "@APP_VERSION_NUMBER@"
+#define APP_LICENSE "Distributed under the GNU GENERAL PUBLIC LICENSE Version 3"
+
+#endif // APPLICATIONINFO_H

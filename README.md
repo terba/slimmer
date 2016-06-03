@@ -8,7 +8,7 @@ Basically it's a hub between LMS, LCDProc and standard linux keyboard events. Fo
 
 ## Quickstart
 
-You can download binary packages for the [PiCorePlayer image](https://sites.google.com/site/picoreplayer/home) running on a Raspberry PI from here. See [this wiki page](https://github.com/terba/slimmer/wiki/Building-a-player) for instructions.
+You can download binary packages for the [piCorePlayer image](https://sites.google.com/site/picoreplayer/home) running on a Raspberry PI from here. See [this wiki page](https://github.com/terba/slimmer/wiki/Building-a-player) for instructions.
 
 ## How to build
 
@@ -34,7 +34,7 @@ After a successful build you can find the executable named *slimmer* in the buil
 
 ## Usage
 
-You can configure Slimmer through command line arguments:
+You can configure Slimmer through command line arguments. For more info see the [User manual](https://github.com/terba/slimmer/wiki/User-manual).
 
 ```
 Usage:
