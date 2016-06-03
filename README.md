@@ -34,7 +34,7 @@ After a successful build you can find the executable named *slimmer* in the buil
 
 ## Usage
 
-You can configure Slimmer through command line arguments. For more info see the [User manual](https://github.com/terba/slimmer/wiki/User-manual).
+You can configure Slimmer through command line arguments. For general usage see the [User manual](https://github.com/terba/slimmer/wiki/User-manual).
 
 ```
 Usage:
