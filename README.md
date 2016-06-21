@@ -16,7 +16,7 @@ You can download binary packages for the [piCorePlayer image](https://sites.goog
 
 * a C++ build environment supporting C++11
 * CMake 3.1.0+
-* lcdapi library with development files (headers)
+* [lcdapi library with development files (headers)](https://github.com/spdawson/lcdapi)
 * curl library with development files (headers)
 * ICU library with development files (headers)
 
@@ -30,7 +30,14 @@ cmake -DCMAKE_BUILD_TYPE=Release ../slimmer
 make
 ```
 
+For embedded systems use the following cmake command to optimize for size:
+```
+cmake -DCMAKE_BUILD_TYPE=MinSizeRel ../slimmer
+```
+
 After a successful build you can find the executable named *slimmer* in the build directory.
+
+For more information visit the [For developers wiki page](https://github.com/terba/slimmer/wiki/For-developers).
 
 ## Usage
 
@@ -97,4 +104,4 @@ To exit from Slimmer press `Ctrl+c`.
 
 ### Run as a daemon
 
-To run Slimmer as a daemon you can use and adapt the init script located in the *scripts* folder of the sources.
+To run Slimmer as a daemon you can use and adapt [the init script](https://github.com/terba/slimmer/blob/master/scripts/slimmer) located in the *scripts* folder of the sources.
