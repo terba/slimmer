@@ -35,7 +35,7 @@ Controller::Controller()
 	  mPlayer(Config::playerId(), mServer),
 	  mVolumeScreen(&mLcd)
 {
-	// We disable syncing in LCDAPI, so it will not wait for command completion and response from  LCDd.
+	// We disable syncing in LCDAPI, so it will not wait for command completion and response from LCDd.
 	// Refreshing the display is many times faster with this, so fast browsing in the menus is now OK.
 	mLcd.disableSync();
 	
