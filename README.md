@@ -104,4 +104,4 @@ To exit from Slimmer press `Ctrl+c`.
 
 ### Run as a daemon
 
-To run Slimmer as a daemon you can use and adapt [the init script](https://github.com/terba/slimmer/blob/master/scripts/slimmer) located in the *scripts* folder of the sources.
+To run Slimmer as a daemon you can use and adapt [the init script](https://github.com/terba/slimmer/blob/master/scripts/slimmer) located in the *scripts* folder of the sources. It is meant to be used on Tiny Core style distributions (piCore, piCorePlayer), so it doesn't contain LSB headers used on more sophisticated distros.
