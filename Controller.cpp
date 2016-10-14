@@ -315,6 +315,7 @@ void Controller::handleEvent(const Event event)
 	}
 	catch (const jsonrpc::JsonRpcException& e)
 	{
+		mMenuScreen.progressOff();
 		cerr << "[ERROR] " << e.what() << endl;
 	}
 }
