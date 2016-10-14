@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 	}
 	catch (const TCLAP::ArgException& e)
 	{
-		cerr << "Error: " << e.error() << " " << e.argId() << endl;
+		cerr << "[ERROR] " << e.error() << " " << e.argId() << endl;
 		return EXIT_FAILURE;
 	}
 
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
 		}
 		catch (const lcdapi::LCDException& e)
 		{
-			cerr << "LCDd communication error: " << e.what() << endl;
+			cerr << "[ERROR] LCDd communication problem: " << e.what() << endl;
 		}
 
 		// Sleeping for some time and retrying initialization

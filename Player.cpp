@@ -28,41 +28,52 @@ void Player::update(const bool fullPlaylist)
 {
 	Json::Value response = mServer.playerStatus(mId, fullPlaylist);
 
-	string s = response["mode"].asString();
-	if (s == "play")
-		mMode = Play;
-	else if (s == "stop")
-		mMode = Stop;
-	else if (s == "pause")
-		mMode = Pause;
-	else
-		mMode = Unknown;
+	if (Config::verbose())
+		cout << "Status: " << response.toStyledString() << endl;
 
-	mPowered = response["power"].asInt() == 1;
+	try
+	{
+		string s = response["mode"].asString();
+		if (s == "play")
+			mMode = Play;
+		else if (s == "stop")
+			mMode = Stop;
+		else if (s == "pause")
+			mMode = Pause;
+		else
+			mMode = Unknown;
 
-	mPlaylistSize = response["playlist_tracks"].asInt();
-	s = response["playlist_cur_index"].asString();
-	if (s.length() > 0)
-		mPlaylistIndex = stoi(s);
-	else
-		mPlaylistIndex = 0;
+		mPowered = response["power"].asInt() == 1;
 
-	int loopIndex = fullPlaylist ? mPlaylistIndex : 0;
+		mPlaylistSize = response["playlist_tracks"].asInt();
+		s = response["playlist_cur_index"].asString();
+		if (s.length() > 0)
+			mPlaylistIndex = stoi(s);
+		else
+			mPlaylistIndex = 0;
 
-	mRemote = response["playlist_loop"][loopIndex]["remote"].asString() == "1";
-	mRemoteTitle = response["playlist_loop"][loopIndex]["remote_title"].asString();
-	mArtist = response["playlist_loop"][loopIndex]["artist"].asString();
-	mAlbum = response["playlist_loop"][loopIndex]["album"].asString();
-	mTitle = response["playlist_loop"][loopIndex]["title"].asString();
-	mDuration = response["duration"].asFloat();
-	mTime = response["time"].asFloat();
+		int loopIndex = fullPlaylist ? mPlaylistIndex : 0;
 
-	mVolume = response["mixer volume"].asInt();
-	mRepeat = response["playlist repeat"].asInt();
-	mShuffle = response["playlist shuffle"].asInt();
+		mRemote = response["playlist_loop"][loopIndex]["remote"].asString() == "1";
+		mRemoteTitle = response["playlist_loop"][loopIndex]["remote_title"].asString();
+		mArtist = response["playlist_loop"][loopIndex]["artist"].asString();
+		mAlbum = response["playlist_loop"][loopIndex]["album"].asString();
+		mTitle = response["playlist_loop"][loopIndex]["title"].asString();
+		mDuration = response["duration"].asFloat();
+		mTime = response["time"].asFloat();
 
-	if (fullPlaylist)
-		mPlaylist = mPlaylistSize == 0 ? Json::arrayValue : response["playlist_loop"];
+		mVolume = response["mixer volume"].asInt();
+		mRepeat = response["playlist repeat"].asInt();
+		mShuffle = response["playlist shuffle"].asInt();
+
+		if (fullPlaylist)
+			mPlaylist = mPlaylistSize == 0 ? Json::arrayValue : response["playlist_loop"];
+	}
+	catch (const Json::LogicError& e)
+	{
+		cerr << "[ERROR] Status: " << response.toStyledString() << endl;
+		cerr << "[ERROR] Invalid JSON response from server: " << e.what() << endl;
+	}
 }
 
 void Player::setVolume(const int volume)

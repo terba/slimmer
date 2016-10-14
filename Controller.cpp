@@ -117,7 +117,7 @@ void Controller::run()
 	}
 	catch (const jsonrpc::JsonRpcException& e)
 	{
-		cerr << "Startup volume can not be set: " << e.what() << endl;
+		cerr << "[ERROR] Startup volume can not be set: " << e.what() << endl;
 	}
 	ev::default_loop loop;
 	loop.run(0);
@@ -315,7 +315,7 @@ void Controller::handleEvent(const Event event)
 	}
 	catch (const jsonrpc::JsonRpcException& e)
 	{
-		cerr << e.what() << endl;
+		cerr << "[ERROR] " << e.what() << endl;
 	}
 }
 
@@ -357,7 +357,7 @@ void Controller::readInput(ev::io& w, int revents)
 	}
 	if (readSize == -1 && errno != EAGAIN && errno != EINTR)
 	{
-		cerr << "Input device read error" << endl;
+		cerr << "[ERROR] Input device read error" << endl;
 	}
 }
 
