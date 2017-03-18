@@ -23,10 +23,10 @@ ScreenVolume::ScreenVolume(LCDClient* parent) : Screen(parent, "Volume", "Volume
 	setHeartBeat(LCD_HEARTBEAT_OFF);
 	hide();
 
-	mTitle.set(cTitleText, width() / 2 - cTitleLength / 2 + 1,2);
-	mLeftBracket.set("[", 1, 3);
-	mRightBracket.set("]", width(), 3);
-	mBar.set((width() - 2) * parent->getCharWidth(), 2, 3);
+	mTitle.set(cTitleText, width() / 2 - cTitleLength / 2 + 1, height()/2);
+	mLeftBracket.set("[", 1, height()/2+1);
+	mRightBracket.set("]", width(), height()/2+1);
+	mBar.set((width() - 2) * parent->getCharWidth(), 2, height()/2+1);
 	mBar.setPercentageMax((width() - 2) * parent->getCharWidth());
 
 	add(&mTitle);

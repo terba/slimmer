@@ -23,8 +23,8 @@ ScreenError::ScreenError(lcdapi::LCDClient* parent) : Screen(parent, "Error", "E
 	setHeartBeat(LCD_HEARTBEAT_OFF);
 	hide();
 
-	mTitle.set(cTitleText, width() / 2 - cTitleLength / 2 + 1,2);
-	mScroller.set("", 1, 3, width(), 3, cScrollingSpeed, LCDScroller::Marquee);
+	mTitle.set(cTitleText, width() / 2 - cTitleLength / 2 + 1, height()/2);
+	mScroller.set("", 1, height()/2+1, width(), height()/2+1, cScrollingSpeed, LCDScroller::Marquee);
 
 	add(&mTitle);
 	add(&mScroller);
