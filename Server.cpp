@@ -32,7 +32,7 @@ Json::Value Server::artists()
 	Json::Value query;
 	query.append("artists");
 	query.append("0"); // <start>
-	query.append("0"); // <itemsPerResponse>
+	query.append(cMaxResponseItems); // <itemsPerResponse>
 	params.append(query);
 
 	return mClient.CallMethod("slim.request", params)["artists_loop"];
