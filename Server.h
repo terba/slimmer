@@ -31,13 +31,15 @@ public:
 	enum PlaylistControlType {GENRE, ARTIST, ALBUM, TRACK, YEAR, PLAYLIST, FOLDER, PLAYLISTNAME};
 
 	Server(const string& url);
-	Json::Value artists();
+	Json::Value artists(const bool albumArtists = false);
 	Json::Value albums(const string& artistId = "");
 	Json::Value newAlbums();
 	Json::Value tracks(const string& albumId);
 	Json::Value favorites();
 	Json::Value radioPlugins();
 	Json::Value folders(const string& folderId = "");
+
+	const string& version() const { return mVersion; }
 
 	Json::Value playerStatus(const string& playerId, const bool fullPlaylist);
 	void setPlayerVolume(const string& playerId, const string& volume);
@@ -55,6 +57,7 @@ protected:
 
 	jsonrpc::HttpClient mHttpClient;
 	jsonrpc::Client mClient;
+	string mVersion;
 };
 
 #endif // SERVER_H

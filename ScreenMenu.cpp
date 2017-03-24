@@ -20,7 +20,7 @@
 #include "Config.h"
 #include <iostream>
 
-ScreenMenu::ScreenMenu(LCDClient* parent) : Screen(parent, "Menu", "Menu"), mMenu("", MenuItem::MENU, "Main")
+ScreenMenu::ScreenMenu(LCDClient* parent, const string& serverVersion) : Screen(parent, "Menu", "Menu"), mMenu("", MenuItem::MENU, "Main")
 {
 	setHeartBeat(LCD_HEARTBEAT_OFF);
 	hide();
@@ -35,6 +35,8 @@ ScreenMenu::ScreenMenu(LCDClient* parent) : Screen(parent, "Menu", "Menu"), mMen
 	// Creating the menu structure
 	mMenu.addItem(MenuItem("", MenuItem::QUEUE, "Playing queue", true));
 	mMenu.addItem(MenuItem("", MenuItem::MENU, "Music library"));
+	if (serverVersion >= "7.9.0")
+		mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::ALBUMARTISTS, "Album Artists"));
 	mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::ARTISTS, "Artists"));
 	mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::ALBUMS, "Albums"));
 	mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::NEWMUSIC, "New Music"));

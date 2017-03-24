@@ -23,9 +23,16 @@
 
 Server::Server(const string& url) : mHttpClient(url), mClient(mHttpClient)
 {
+	Json::Value params;
+	params.append("");
+	Json::Value query;
+	query.append("version");
+	query.append("?");
+	params.append(query);
+	mVersion = mClient.CallMethod("slim.request", params)["_version"].asString();
 }
 
-Json::Value Server::artists()
+Json::Value Server::artists(const bool albumArtists)
 {
 	Json::Value params;
 	params.append("");
@@ -33,6 +40,10 @@ Json::Value Server::artists()
 	query.append("artists");
 	query.append("0"); // <start>
 	query.append(cMaxResponseItems); // <itemsPerResponse>
+	if (albumArtists)
+	{
+		query.append("role_id:ALBUMARTIST");
+	}
 	params.append(query);
 
 	return mClient.CallMethod("slim.request", params)["artists_loop"];

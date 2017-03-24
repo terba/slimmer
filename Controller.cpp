@@ -31,7 +31,7 @@ Controller::Controller()
 	  mServer("http://" + Config::lmsHost() + ":" + to_string(Config::lmsPort()) + "/jsonrpc.js"),
 	  mNowPlayingScreen(&mLcd),
 	  mErrorScreen(&mLcd),
-	  mMenuScreen(&mLcd),
+	  mMenuScreen(&mLcd, mServer.version()),
 	  mPlayer(Config::playerId(), mServer),
 	  mVolumeScreen(&mLcd)
 {
@@ -67,6 +67,7 @@ Controller::Controller()
 			 << ", Height: " << mLcd.getHeight()
 			 << ", Char width: " << mLcd.getCharWidth()
 			 << ", Char height: " << mLcd.getCharHeight() << ")" << endl;
+		cout << "LMS version: " + mServer.version() << endl;
 	}
 
 	updateStatus(mStatusUpdateTimer, 0);
@@ -188,6 +189,7 @@ void Controller::handleEvent(const Event event)
 				case MenuItem::QUEUEITEM:
 					actionPlayQueueItem(selected);
 					break;
+				case MenuItem::ALBUMARTISTS:
 				case MenuItem::ARTISTS:
 					actionShowArtists(selected);
 					break;
@@ -382,7 +384,7 @@ void Controller::actionPlayQueueItem(MenuItem& selected)
 void Controller::actionShowArtists(MenuItem& selected)
 {
 	mMenuScreen.progressOn();
-	Json::Value artists = mServer.artists();
+	Json::Value artists = mServer.artists(selected.type() == MenuItem::ALBUMARTISTS);
 	selected.clearItems();
 	for (int i = 0; i < artists.size(); i++)
 		selected.addItem(MenuItem(artists[i]["id"].asString(), MenuItem::ARTIST, artists[i]["artist"].asString()));

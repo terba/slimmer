@@ -31,7 +31,7 @@ using namespace lcdapi;
 class ScreenMenu : public Screen
 {
 public:
-	ScreenMenu(LCDClient* parent);
+	ScreenMenu(LCDClient* parent, const string& serverVersion);
 	~ScreenMenu();
 
 	MenuItem& selectedItem() const;
