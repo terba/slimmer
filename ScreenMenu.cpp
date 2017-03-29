@@ -37,7 +37,7 @@ ScreenMenu::ScreenMenu(LCDClient* parent, const string& serverVersion) : Screen(
 	mMenu.addItem(MenuItem("", MenuItem::MENU, "Music library"));
 	if (serverVersion >= "7.9.0")
 		mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::ALBUMARTISTS, "Album Artists"));
-	mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::ARTISTS, "Artists"));
+	mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::ARTISTS, serverVersion >= "7.9.0" ? "All Artists" : "Artists"));
 	mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::ALBUMS, "Albums"));
 	mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::NEWMUSIC, "New Music"));
 	mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::FOLDERS, "Folders"));
