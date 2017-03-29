@@ -104,7 +104,14 @@ void Player::next()
 
 void Player::previous()
 {
-	mServer.playPlaylistItem(mId, "-1");
+	if (!mRemote && mTime > Config::cTrackRestartLimit)
+	{
+		// We restart the current track if it is played for more than cTrackRestartLimit
+		// seconds instead of jumping to the previous track.
+		this->playPlaylistItem(mPlaylistIndex);
+	}
+	else
+		mServer.playPlaylistItem(mId, "-1");
 }
 
 void Player::playPlaylistItem(const int index)

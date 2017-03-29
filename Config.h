@@ -51,6 +51,7 @@ public:
 	static const double cButtonLongPressTime; // Double in seconds
 	static const short int cVolumeStep; // In percent
 	static const short int cNewMusicItems;
+	static const short int cTrackRestartLimit; // In seconds
 
 protected:
 	bool static mVerbose;

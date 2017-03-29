@@ -35,6 +35,7 @@ const double Config::cPopupHideDelay = 0.6;
 const double Config::cButtonLongPressTime = 0.4;
 const short int Config::cVolumeStep = 2;
 const short int Config::cNewMusicItems = 100;
+const short int Config::cTrackRestartLimit = 3;
 
 bool Config::mVerbose;
 string Config::mLmsHost;
