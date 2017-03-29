@@ -26,9 +26,12 @@
 class Button
 {
 public:
-	enum ButtonEvent {PRESS, RELEASE};
+	enum ButtonEvent {PRESS, RELEASE, REPEAT};
 
-	Button(EventHandler* const parent, const unsigned short key, const EventHandler::Event shortEvent, const EventHandler::Event longEvent = EventHandler::NONE);
+	Button(EventHandler* const parent, const unsigned short key,
+		   const EventHandler::Event shortEvent,
+		   const EventHandler::Event longEvent = EventHandler::NONE,
+		   const EventHandler::Event repeatEvent = EventHandler::NONE);
 
 	void handleKey(const ButtonEvent event, const unsigned short key);
 
@@ -41,6 +44,7 @@ protected:
 	ev::timer mPressTimer;
 	const EventHandler::Event mShortEvent;
 	const EventHandler::Event mLongEvent;
+	const EventHandler::Event mRepeatEvent;
 };
 
 #endif // BUTTON_H

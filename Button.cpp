@@ -19,8 +19,8 @@
 #include "Button.h"
 #include "Config.h"
 
-Button::Button(EventHandler* const parent, const unsigned short key, const EventHandler::Event shortEvent, const EventHandler::Event longEvent) :
-	mParent(parent), mKey(key), mShortEvent(shortEvent), mLongEvent(longEvent)
+Button::Button(EventHandler* const parent, const unsigned short key, const EventHandler::Event shortEvent, const EventHandler::Event longEvent, const EventHandler::Event repeatEvent) :
+	mParent(parent), mKey(key), mShortEvent(shortEvent), mLongEvent(longEvent), mRepeatEvent(repeatEvent)
 {
 	if (mLongEvent)
 		mPressTimer.set<Button, &Button::longPressTimeout>(this);
@@ -29,24 +29,25 @@ Button::Button(EventHandler* const parent, const unsigned short key, const Event
 void Button::handleKey(const ButtonEvent event, const unsigned short key)
 {
 	if (key != mKey) return;
-	if (mLongEvent)
+	switch (event)
 	{
-		if (event == PRESS)
-		{
+	case PRESS:
+		if (mLongEvent)
 			mPressTimer.start(Config::cButtonLongPressTime);
-		}
-		else // RELEASE
+		else
+			mParent->handleEvent(mShortEvent);
+		break;
+	case RELEASE:
+		if (mLongEvent && mPressTimer.is_active())
 		{
-			if (mPressTimer.is_active())
-			{
-				mPressTimer.stop();
-				mParent->handleEvent(mShortEvent);
-			}
+			mPressTimer.stop();
+			mParent->handleEvent(mShortEvent);
 		}
-	}
-	else if (event == PRESS)
-	{
-		mParent->handleEvent(mShortEvent);
+		break;
+	case REPEAT:
+		if (mRepeatEvent)
+			mParent->handleEvent(mRepeatEvent);
+		break;
 	}
 }
 

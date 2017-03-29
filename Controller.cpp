@@ -40,10 +40,10 @@ Controller::Controller()
 	mLcd.disableSync();
 	
 	mButtons.push_back(new Button(this, KEY_ENTER, SELECT, SELECTLONG));
-	mButtons.push_back(new Button(this, KEY_LEFT, LEFT, NONE));
-	mButtons.push_back(new Button(this, KEY_RIGHT, RIGHT, NONE));
+	mButtons.push_back(new Button(this, KEY_LEFT, LEFT, NONE, LEFT));
+	mButtons.push_back(new Button(this, KEY_RIGHT, RIGHT, NONE, RIGHT));
 	mButtons.push_back(new Button(this, KEY_BACKSPACE, BACK, BACKLONG));
-	mButtons.push_back(new Button(this, KEY_SPACE, FORWARD, NONE));
+	mButtons.push_back(new Button(this, KEY_SPACE, FORWARD));
 
 	if ((mInputDeviceFileDescriptor = open(Config::inputDeviceFile().c_str(), O_RDONLY | O_NONBLOCK)) == -1)
 		throw ErrorInput("Can not open device file " + Config::inputDeviceFile());
@@ -350,10 +350,9 @@ void Controller::readInput(ev::io& w, int revents)
 
 	while ((readSize = read(mInputDeviceFileDescriptor, &inputEvent, sizeof(inputEvent))) > 0)
 	{
-		// Only key presses and releases are handled, repeating not (Pikeyd doesn't support them anyway)
-		if (readSize == sizeof(inputEvent) && inputEvent.type == EV_KEY && (inputEvent.value == 1 || inputEvent.value == 0))
+		if (readSize == sizeof(inputEvent) && inputEvent.type == EV_KEY && (inputEvent.value == 1 || inputEvent.value == 0 || inputEvent.value == 2))
 		{
-			Button::ButtonEvent buttonEvent = inputEvent.value == 1 ? Button::PRESS : Button::RELEASE;
+			Button::ButtonEvent buttonEvent = inputEvent.value == 1 ? Button::PRESS : inputEvent.value == 0 ? Button::RELEASE : Button::REPEAT;
 			for (Button* const button : mButtons)
 				button->handleKey(buttonEvent, inputEvent.code);
 		}
