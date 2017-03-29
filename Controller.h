@@ -66,6 +66,8 @@ protected:
 	void actionRemoveQueueItem(MenuItem& selected);
 
 protected:
+	static const constexpr char* cEmptyQueueText = "Queue is empty";
+
 	lcdapi::LCDClient mLcd;
 	Server mServer;
 	Player mPlayer;

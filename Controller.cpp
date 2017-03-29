@@ -367,10 +367,15 @@ void Controller::actionShowQueue(MenuItem& selected)
 {
 	mMenuScreen.progressOn();
 	mPlayer.update(true);
-	selected.clearItems();
-	for (int i = 0; i < mPlayer.playlist().size(); i++)
-		selected.addItem(MenuItem(std::to_string(i), MenuItem::QUEUEITEM, mPlayer.playlist()[i]["title"].asString()));
-	mMenuScreen.select();
+	if (mPlayer.playlist().size())
+	{
+		selected.clearItems();
+		for (int i = 0; i < mPlayer.playlist().size(); i++)
+			selected.addItem(MenuItem(std::to_string(i), MenuItem::QUEUEITEM, mPlayer.playlist()[i]["title"].asString()));
+		mMenuScreen.select();
+	}
+	else
+		showPopup(cEmptyQueueText);
 	mMenuScreen.progressOff();
 }
 
@@ -537,4 +542,9 @@ void Controller::actionRemoveQueueItem(MenuItem& selected)
 {
 	mPlayer.removePlaylistItem(std::stoi(selected.id()));
 	mMenuScreen.removeSelected();
+	if (mMenuScreen.itemCount() == 0)
+	{
+		mMenuScreen.back();
+		showPopup(cEmptyQueueText);
+	}
 }

@@ -37,6 +37,7 @@ public:
 	MenuItem& selectedItem() const;
 	MenuItem& pathItem(const int index) const { return *mPath[index]; }
 	int level() const { return mPath.size(); }
+	int itemCount() const { return mPath.back()->itemCount(); }
 
 	void removeItem(const int index);
 	void removeSelected();
