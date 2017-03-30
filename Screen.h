@@ -43,8 +43,6 @@ protected:
 
 	string trail(const string& s) const;
 
-	static const int cScrollingSpeed = 3;
-
 private:
 	int mWidth;
 	int mHeight;

@@ -17,7 +17,6 @@
 */
 
 #include "ScreenMenu.h"
-#include "Config.h"
 #include <iostream>
 
 ScreenMenu::ScreenMenu(LCDClient* parent, const string& serverVersion) : Screen(parent, "Menu", "Menu"), mMenu("", MenuItem::MENU, "Main")

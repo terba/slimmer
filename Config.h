@@ -38,6 +38,7 @@ public:
 	const int static volume() { return mVolume; }
 	const string static inputDeviceFile() { return mInputDeviceFile; }
 	const string static encoding() { return mEncoding; }
+	const int static scrollSpeed() { return mScrollSpeed; }
 
 protected:
 	string static getMacAddress();
@@ -64,6 +65,7 @@ protected:
 	int static mVolume;
 	string static mInputDeviceFile;
 	string static mEncoding;
+	int static mScrollSpeed;
 };
 
 #endif // CONFIG_H

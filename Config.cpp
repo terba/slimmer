@@ -47,6 +47,7 @@ bool Config::mFixedVolume;
 int Config::mVolume;
 string Config::mInputDeviceFile;
 string Config::mEncoding;
+int Config::mScrollSpeed;
 
 int Config::processOptions(int argc, char* argv[])
 {
@@ -66,7 +67,9 @@ int Config::processOptions(int argc, char* argv[])
 	ValueArg<int> volumeArg("o", "volume", "set volume on startup", false, -1, "0-100");
 	ValueArg<string> inputArg("i", "input", "keyboard input device file (default: /dev/input/event0)", false, "/dev/input/event0", "input device file");
 	ValueArg<string> encodingArg("e", "encoding", "the LCD's character encoding (default: ISO-8859-1)", false, "ISO-8859-1", "single-byte encoding");
+	ValueArg<int> scrollspeedArg("c", "scrollspeed", "text scrolling speed (default: 3)", false, 3, "0-10");
 
+	cmd.add(scrollspeedArg);
 	cmd.add(encodingArg);
 	cmd.add(inputArg);
 	cmd.add(volumeArg);
@@ -90,9 +93,12 @@ int Config::processOptions(int argc, char* argv[])
 	mVolume = volumeArg.getValue();
 	mInputDeviceFile = inputArg.getValue();
 	mEncoding = encodingArg.getValue();
+	mScrollSpeed = scrollspeedArg.getValue();
 
 	if (mVolume < -1 || mVolume > 100)
 		throw(ArgParseException("Invalid volume value", "--volume"));
+	if (mScrollSpeed < 0 || mScrollSpeed > 10)
+		throw(ArgParseException("Invalid scrollspeed value", "--scrollspeed"));
 
 	if (mPlayerId.empty())
 		mPlayerId = getMacAddress();

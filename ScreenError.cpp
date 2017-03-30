@@ -17,6 +17,7 @@
 */
 
 #include "ScreenError.h"
+#include "Config.h"
 
 ScreenError::ScreenError(lcdapi::LCDClient* parent) : Screen(parent, "Error", "Error")
 {
@@ -24,7 +25,7 @@ ScreenError::ScreenError(lcdapi::LCDClient* parent) : Screen(parent, "Error", "E
 	hide();
 
 	mTitle.set(cTitleText, width() / 2 - cTitleLength / 2 + 1, height()/2);
-	mScroller.set("", 1, height()/2+1, width(), height()/2+1, cScrollingSpeed, LCDScroller::Marquee);
+	mScroller.set("", 1, height()/2+1, width(), height()/2+1, Config::scrollSpeed(), LCDScroller::Marquee);
 
 	add(&mTitle);
 	add(&mScroller);

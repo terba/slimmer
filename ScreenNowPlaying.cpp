@@ -17,6 +17,7 @@
 */
 
 #include "ScreenNowPlaying.h"
+#include "Config.h"
 #include <math.h>
 
 ScreenNowPlaying::ScreenNowPlaying(LCDClient* parent) : Screen(parent, "NowPlaying", "NowPlaying")
@@ -26,11 +27,11 @@ ScreenNowPlaying::ScreenNowPlaying(LCDClient* parent) : Screen(parent, "NowPlayi
 	mMode.move(1, 1);
 	mTime.move(3, 1);
 	mPlaylist.move(width()-5, 1);
-	mLine2.set("", 1, 2, width(), 2, cScrollingSpeed, LCDScroller::Marquee);
+	mLine2.set("", 1, 2, width(), 2, Config::scrollSpeed(), LCDScroller::Marquee);
 	if (height() > 2)
-		mLine3.set("", 1, 3, width(), 3, cScrollingSpeed, LCDScroller::Marquee);
+		mLine3.set("", 1, 3, width(), 3, Config::scrollSpeed(), LCDScroller::Marquee);
 	if (height() > 3)
-		mLine4.set("", 1, 4, width(), 4, cScrollingSpeed, LCDScroller::Marquee);
+		mLine4.set("", 1, 4, width(), 4, Config::scrollSpeed(), LCDScroller::Marquee);
 
 	add(&mMode);
 	add(&mTime);
