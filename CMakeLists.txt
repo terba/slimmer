@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
 project(slimmer CXX)
-set (APP_VERSION_NUMBER 1.0)
+set (APP_VERSION_NUMBER 1.2)
 
 #################################################################################
 # Libraries
