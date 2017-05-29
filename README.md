@@ -48,7 +48,7 @@ Usage:
    ./slimmer  [-v] [-s <ip or hostname>] [-p <number>] [-l <ip or
               hostname>] [-P <number>] [-m <AA:BB:CC:DD:EE:FF>] [-f] [-o
               <0-100>] [-i <input device file>] [-e <single-byte encoding>]
-              [--] [--version] [-h]
+              [-c <0-10>] [--] [--version] [-h]
 
 Where: 
    -v,  --verbose
@@ -80,6 +80,9 @@ Where:
 
    -e <single-byte encoding>,  --encoding <single-byte encoding>
      the LCD's character encoding (default: ISO-8859-1)
+
+   -c <0-10>,  --scrollspeed <0-10>
+     text scrolling speed (default: 3)
 
    --,  --ignore_rest
      Ignores the rest of the labeled arguments following this flag.
