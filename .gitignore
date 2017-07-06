@@ -1,2 +1,4 @@
 CMakeLists.txt.user
 CMakeLists.txt.user.3.3-pre1
+scripts/devEnv-home.sh
+

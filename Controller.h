@@ -1,6 +1,6 @@
 /*
 	Controller.h - Slimmer
-	Copyright (C) 2016  Terényi, Balázs (terenyi@freemail.hu)
+	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -47,6 +47,8 @@ protected:
 	void hideMenuScreen();
 	void showPopup(const std::string message);
 	void hidePopup();
+	void startStandby();
+	void stopStandby();
 
 protected:
 	void actionShowQueue(MenuItem& selected);
@@ -65,6 +67,8 @@ protected:
 	void actionLoad(MenuItem& selected, Server::PlaylistControlCommand command);
 	void actionRemoveQueueItem(MenuItem& selected);
 
+	void setBacklight(const bool on);
+
 protected:
 	static const constexpr char* cEmptyQueueText = "Queue is empty";
 
@@ -81,9 +85,12 @@ protected:
 	ev::timer mVolumeScreenHideTimer;
 	ev::timer mMenuScreenHideTimer;
 	ev::timer mPopupHideTimer;
+	ev::timer mStandbyTimer;
 	int mInputDeviceFileDescriptor;
 
 	vector<Button*> mButtons;
+
+	bool mInStandby;
 };
 
 #endif // CONTROLLER_H

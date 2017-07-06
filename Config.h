@@ -1,6 +1,6 @@
 /*
 	Config.h - Slimmer
-	Copyright (C) 2016  Terényi, Balázs (terenyi@freemail.hu)
+	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ public:
 	int static processOptions(int argc, char* argv[]);
 
 	const bool static verbose() { return mVerbose; }
+	const string static lmsName() { return mLmsName; }
 	const string static lmsHost() { return mLmsHost; }
 	const int static lmsPort() { return mLmsPort; }
 	const string static lcdHost() { return mLcdHost; }
@@ -42,10 +43,12 @@ public:
 
 protected:
 	string static getMacAddress();
+	void static discoverLMS();
 
 public:
 	static const short int cRetryDelay; // In seconds
 	static const double cPlayerStatusQueryInterval; // Double in seconds
+	static const double cPlayerStatusQueryIntervalInStandby; // Double in seconds
 	static const double cVolumeScreenHideDelay; // Double in seconds
 	static const double cMenuScreenHideDelay; // Double in seconds
 	static const double cPopupHideDelay; // Double in seconds
@@ -53,9 +56,11 @@ public:
 	static const short int cVolumeStep; // In percent
 	static const short int cNewMusicItems;
 	static const short int cTrackRestartLimit; // In seconds
+	static const double cStandbyTimeout; // Double in seconds
 
 protected:
 	bool static mVerbose;
+	string static mLmsName;
 	string static mLmsHost;
 	int static mLmsPort;
 	string static mLcdHost;

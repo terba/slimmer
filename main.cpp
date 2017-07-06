@@ -1,6 +1,6 @@
 /*
 	main.cpp - Slimmer
-	Copyright (C) 2016  Terényi, Balázs (terenyi@freemail.hu)
+	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 	if (Config::verbose())
 	{
 		cout << "Configuration:" << endl;
-		cout << "  LMS: " << Config::lmsHost() << ":" << Config::lmsPort() << endl;
+		cout << "  LMS: " << Config::lmsHost() << ":" << Config::lmsPort() << " named \"" << Config::lmsName() << "\"" << endl;
 		cout << "  LCDd: " << Config::lcdHost() << ":" << Config::lcdPort() << endl;
 		cout << "  PlayerId (MAC): " << Config::playerId() << endl;
 		cout << "  Input device: " << Config::inputDeviceFile() << endl;

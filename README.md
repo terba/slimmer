@@ -55,10 +55,10 @@ Where:
      be verbose
 
    -s <ip or hostname>,  --lmshost <ip or hostname>
-     LMS host (default: localhost)
+     LMS host (default: autodiscovery)
 
    -p <number>,  --lmsport <number>
-     LMS port (default: 9000)
+     LMS HTTP port (default: autodiscovery)
 
    -l <ip or hostname>,  --lcdhost <ip or hostname>
      lcdproc host (default: localhost)
@@ -94,7 +94,7 @@ Where:
      Displays usage information and exits.
 
 
-   Copyright (C) 2016  Terényi, Balázs (terenyi@freemail.hu)
+   Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
 
    This program comes with ABSOLUTELY NO WARRANTY. This is free software,
    and you are welcome to redistribute it under certain conditions. See

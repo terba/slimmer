@@ -1,6 +1,6 @@
 /*
 	Config.cpp - Slimmer
-	Copyright (C) 2016  Terényi, Balázs (terenyi@freemail.hu)
+	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -25,10 +25,13 @@
 #include <ifaddrs.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 #include "tclap/CmdLine.h"
 
 const short int Config::cRetryDelay = 1;
 const double Config::cPlayerStatusQueryInterval = 0.5;
+const double Config::cPlayerStatusQueryIntervalInStandby = 3;
 const double Config::cVolumeScreenHideDelay = 1;
 const double Config::cMenuScreenHideDelay = 8;
 const double Config::cPopupHideDelay = 0.6;
@@ -36,8 +39,10 @@ const double Config::cButtonLongPressTime = 0.4;
 const short int Config::cVolumeStep = 2;
 const short int Config::cNewMusicItems = 100;
 const short int Config::cTrackRestartLimit = 3;
+const double Config::cStandbyTimeout = 30;
 
 bool Config::mVerbose;
+string Config::mLmsName = "unknown";
 string Config::mLmsHost;
 int Config::mLmsPort;
 string Config::mLcdHost;
@@ -58,8 +63,8 @@ int Config::processOptions(int argc, char* argv[])
 				string(APP_VERSION_NUMBER) + " (Build " + BUILD_DATE + " " + BUILD_SYSTEM + " " + BUILD_SYSTEM_PROCESSOR + ")");
 
 	SwitchArg verboseArg("v", "verbose", "be verbose", false);
-	ValueArg<string> lmshostArg("s", "lmshost", "LMS host (default: localhost)", false, "localhost", "ip or hostname");
-	ValueArg<int> lmsportArg("p", "lmsport", "LMS port (default: 9000)", false, 9000, "number");
+	ValueArg<string> lmshostArg("s", "lmshost", "LMS host (default: autodiscovery)", false, "", "ip or hostname");
+	ValueArg<int> lmsportArg("p", "lmsport", "LMS HTTP port (default: autodiscovery)", false, 0, "number");
 	ValueArg<string> lcdhostArg("l", "lcdhost", "lcdproc host (default: localhost)", false, "localhost", "ip or hostname");
 	ValueArg<int> lcdportArg("P", "lcdport", "lcdproc port (default: 13666)", false, 13666, "number");
 	ValueArg<string> macArg("m", "mac", "the player's MAC address (default: automatic, first interface)", false, "", "AA:BB:CC:DD:EE:FF");
@@ -102,6 +107,16 @@ int Config::processOptions(int argc, char* argv[])
 
 	if (mPlayerId.empty())
 		mPlayerId = getMacAddress();
+
+	if (mLmsHost.empty())
+		discoverLMS();
+
+	if (mLmsHost.empty() || mLmsPort == 0)
+	{
+		if (Config::verbose()) cout << "Unsuccessful LMS discovery. Using defaults." << endl;
+		mLmsHost = "localhost";
+		mLmsPort = 9000;
+	}
 }
 
 std::string Config::getMacAddress()
@@ -137,4 +152,60 @@ std::string Config::getMacAddress()
 	close( sd );
 	freeifaddrs( interface_addrs );
 	return os.str();
+}
+
+void Config::discoverLMS()
+{
+	int fd;
+	char buffer[200] = "eIPAD\0NAME\0JSON\0";
+
+	if ((fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+		throw runtime_error("Can not create discovery socket. Errno: " + errno);
+
+	socklen_t broadcast = 1;
+	if (setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast)) != 0)
+		throw runtime_error("Can not set discovery socket options. Errno: " + errno);
+
+	struct timeval timeout;
+	timeout.tv_sec = 2;
+	timeout.tv_usec = 0;
+	if (setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) != 0)
+		throw runtime_error("Can not set discovery socket timeout option. Errno: " + errno);
+
+	struct sockaddr_in out;
+	out.sin_family = AF_INET;
+	out.sin_port = htons(3483);
+	out.sin_addr.s_addr = htonl(INADDR_ANY);
+
+	if (sendto(fd, buffer, 16, 0, (const struct sockaddr*)&out, sizeof(out)) != 16)
+		throw runtime_error("Can not send discovery packet. Errno: " + errno);
+
+	if (Config::verbose()) cout << "LMS discovery request sent" << endl;
+
+	// Waiting for the first answer
+	struct sockaddr_in in;
+	socklen_t insize = sizeof(in);
+	ssize_t recvSize = 1;
+	while (recvSize > 0)
+	{
+		memset(buffer, 0, sizeof(buffer));
+		recvSize = recvfrom(fd, buffer, sizeof(buffer), 0, (struct sockaddr *)&in, &insize);
+		if (recvSize > 0 && strncmp(buffer, "ENAME", 5) == 0)
+		{
+			// Answer should look like "ENAME[namesizebyte]nameJSON[portsizebyte]9001"
+			mLmsHost = inet_ntoa(in.sin_addr);
+			const char* pos = buffer + 6;
+			mLmsName = string(pos, pos + pos[-1]);
+			pos = pos + pos[-1];
+			if (strncmp(pos, "JSON", 4) == 0)
+			{
+				pos = pos + 5;
+				mLmsPort = stoi(string(pos, pos + pos[-1]));
+				if (Config::verbose()) cout << "LMS discovery reply from " << inet_ntoa(in.sin_addr) << endl;
+				recvSize = 0;
+			}
+		}
+	}
+
+	close(fd);
 }

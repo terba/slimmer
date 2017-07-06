@@ -1,6 +1,6 @@
 /*
 	Controller.cpp - Slimmer
-	Copyright (C) 2016  Terényi, Balázs (terenyi@freemail.hu)
+	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ Controller::Controller()
 	// We disable syncing in LCDAPI, so it will not wait for command completion and response from LCDd.
 	// Refreshing the display is many times faster with this, so fast browsing in the menus is now OK.
 	mLcd.disableSync();
-	
+
 	mButtons.push_back(new Button(this, KEY_ENTER, SELECT, SELECTLONG));
 	mButtons.push_back(new Button(this, KEY_LEFT, LEFT, NONE, LEFT));
 	mButtons.push_back(new Button(this, KEY_RIGHT, RIGHT, NONE, RIGHT));
@@ -58,6 +58,9 @@ Controller::Controller()
 	mMenuScreenHideTimer.set<Controller, &Controller::hideMenuScreen>(this);
 	mPopupHideTimer.set<Controller, &Controller::hidePopup>(this);
 
+	mStandbyTimer.set<Controller, &Controller::startStandby>(this);
+	mStandbyTimer.start(Config::cStandbyTimeout);
+
 	if (Config::verbose())
 	{
 		cout << "Connected to LCDd ("
@@ -71,6 +74,8 @@ Controller::Controller()
 	}
 
 	updateStatus(mStatusUpdateTimer, 0);
+	setBacklight(true);
+	mInStandby = false;
 }
 
 Controller::~Controller()
@@ -79,6 +84,7 @@ Controller::~Controller()
 	mStatusUpdateTimer.stop();
 	mVolumeScreenHideTimer.stop();
 	mMenuScreenHideTimer.stop();
+	mStandbyTimer.stop();
 	close(mInputDeviceFileDescriptor);
 	for (Button* button : mButtons) delete button;
 }
@@ -91,12 +97,14 @@ void Controller::updateStatus(ev::timer& w, int revents)
 		if (mErrorScreen.visible())
 			mErrorScreen.hide();
 		mNowPlayingScreen.update(mPlayer);
+		if (mPlayer.playing())
+			stopStandby();
 	}
 	catch (const jsonrpc::JsonRpcException& e)
 	{
 		string message;
 		if (e.GetMessage().find("libcurl error: 52") != string::npos)
-			message = "Player " + mPlayer.id() + " isn't known by the server";
+			message = "Player " + mPlayer.id() + " is unknown at the server";
 		else if (e.GetMessage().find("libcurl error: 7") != string::npos)
 			message = "No connection to LMS server at " + Config::lmsHost() + ":" + to_string(Config::lmsPort());
 		else if (e.GetMessage().find("libcurl error: 28") != string::npos)
@@ -106,7 +114,7 @@ void Controller::updateStatus(ev::timer& w, int revents)
 		hideMenuScreen();
 		mErrorScreen.setText(message);
 		mErrorScreen.show();
-		if (Config::verbose()) cerr << e.what() << endl;
+		if (Config::verbose()) cerr << message << endl;
 	}
 }
 
@@ -129,6 +137,7 @@ void Controller::handleEvent(const Event event)
 	if (Config::verbose())
 		cout << "Event: " << event << endl;
 
+	stopStandby();
 	bool menuWasVisible = mMenuScreen.visible();
 
 	try
@@ -343,6 +352,24 @@ void Controller::hidePopup()
 	mMenuScreen.hidePopup();
 }
 
+void Controller::startStandby()
+{
+	mInStandby = true;
+	setBacklight(false);
+	mStatusUpdateTimer.set(Config::cPlayerStatusQueryIntervalInStandby, Config::cPlayerStatusQueryIntervalInStandby);
+}
+
+void Controller::stopStandby()
+{
+	if (mInStandby)
+	{
+		mInStandby = false;
+		setBacklight(true);
+		mStatusUpdateTimer.set(Config::cPlayerStatusQueryInterval, Config::cPlayerStatusQueryInterval);
+	}
+	mStandbyTimer.start(Config::cStandbyTimeout);
+}
+
 void Controller::readInput(ev::io& w, int revents)
 {
 	struct input_event inputEvent;
@@ -547,4 +574,9 @@ void Controller::actionRemoveQueueItem(MenuItem& selected)
 		mMenuScreen.back();
 		showPopup(cEmptyQueueText);
 	}
+}
+
+void Controller::setBacklight(const bool on)
+{
+	mLcd.setBackLight(on ? lcdapi::LCD_BACKLIGHT_ON : lcdapi::LCD_BACKLIGHT_OFF);
 }

@@ -1,6 +1,6 @@
 /*
 	Player.h - Slimmer
-	Copyright (C) 2016  Terényi, Balázs (terenyi@freemail.hu)
+	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -53,6 +53,7 @@ public:
 	string id() const { return mId; }
 
 	Mode mode() const { return mMode; }
+	bool playing() const { return mMode == Mode::Play; }
 	short playlistSize() const { return mPlaylistSize; }
 	short playlistIndex() const { return mPlaylistIndex; }
 
