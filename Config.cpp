@@ -20,6 +20,7 @@
 #include "ApplicationInfo.h"
 #include "BuildInfo.h"
 
+#include <stdexcept>
 #include <unistd.h>
 #include <cstring>
 #include <ifaddrs.h>
