@@ -29,6 +29,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include "tclap/CmdLine.h"
+#include <unicode/unistr.h>
 
 const short int Config::cRetryDelay = 1;
 const double Config::cPlayerStatusQueryInterval = 0.5;
@@ -117,6 +118,14 @@ int Config::processOptions(int argc, char* argv[])
 		if (Config::verbose()) cout << "Unsuccessful LMS discovery. Using defaults." << endl;
 		mLmsHost = "localhost";
 		mLmsPort = 9000;
+	}
+
+	// Testing the supplied encoding
+	UnicodeString ucs = UnicodeString::fromUTF8("T");
+	int32_t targetsize = ucs.extract(0, ucs.length(), 0, 0, mEncoding.c_str());
+	if (targetsize != 1)
+	{
+		throw(ArgParseException("Invalid character encoding name", "--encoding"));
 	}
 }
 
