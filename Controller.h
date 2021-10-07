@@ -80,13 +80,14 @@ protected:
 	ScreenMenu mMenuScreen;
 	ScreenVolume mVolumeScreen;
 
-	ev::io mInputDeviceIo;
+	vector<ev::io*> mInputDevicesIo;
+
 	ev::timer mStatusUpdateTimer;
 	ev::timer mVolumeScreenHideTimer;
 	ev::timer mMenuScreenHideTimer;
 	ev::timer mPopupHideTimer;
 	ev::timer mStandbyTimer;
-	int mInputDeviceFileDescriptor;
+	vector<int> mInputDeviceFileDescriptors;
 
 	vector<Button*> mButtons;
 
