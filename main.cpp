@@ -45,9 +45,7 @@ int main(int argc, char* argv[])
 		cout << "  LMS: " << Config::lmsHost() << ":" << Config::lmsPort() << " named \"" << Config::lmsName() << "\"" << endl;
 		cout << "  LCDd: " << Config::lcdHost() << ":" << Config::lcdPort() << endl;
 		cout << "  PlayerId (MAC): " << Config::playerId() << endl;
-		cout << "  Input device: " << endl;
-		for (string const i_file : Config::inputDeviceFiles())
-			cout << "    - " << i_file << endl;
+		cout << "  Input device: " << Config::inputDeviceFile() << endl;
 	}
 
 	while (1)
