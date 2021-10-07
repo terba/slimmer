@@ -20,6 +20,7 @@
 #define CONFIG_H
 
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -37,7 +38,7 @@ public:
 	const string static playerId() { return mPlayerId; }
 	const bool static fixedVolume() { return mFixedVolume; }
 	const int static volume() { return mVolume; }
-	const string static inputDeviceFile() { return mInputDeviceFile; }
+	const vector<string> static inputDeviceFiles() { return mInputDeviceFiles; }
 	const string static encoding() { return mEncoding; }
 	const int static scrollSpeed() { return mScrollSpeed; }
 
@@ -68,7 +69,7 @@ protected:
 	string static mPlayerId;
 	bool static mFixedVolume;
 	int static mVolume;
-	string static mInputDeviceFile;
+	vector<string> static mInputDeviceFiles;
 	string static mEncoding;
 	int static mScrollSpeed;
 };
