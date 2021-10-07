@@ -382,6 +382,29 @@ void Controller::readInput(ev::io& w, int revents)
 			Button::ButtonEvent buttonEvent = inputEvent.value == 1 ? Button::PRESS : inputEvent.value == 0 ? Button::RELEASE : Button::REPEAT;
 			for (Button* const button : mButtons)
 				button->handleKey(buttonEvent, inputEvent.code);
+		} else if (readSize == sizeof(inputEvent) && inputEvent.type == EV_REL && (inputEvent.value == 1 || inputEvent.value == -1))
+		{
+			if (Config::verbose())
+				cout << "Matched EV_SYN event. inputEvent.value=" << inputEvent.value << " inputEvent.code=" << inputEvent.code << endl;
+			if (inputEvent.value == 1)
+			{
+				if (Config::verbose())
+					cout << "Matched inputEvent.value == 1" << endl;
+				for (Button* const button : mButtons)
+				{
+					button->handleKey((Button::ButtonEvent) Button::PRESS, KEY_LEFT);
+					button->handleKey((Button::ButtonEvent) Button::RELEASE, KEY_LEFT);
+				}
+			} else if (inputEvent.value == -1)
+			{
+				if (Config::verbose())
+					cout << "Matched inputEvent.value == -1" << endl;
+				for (Button* const button : mButtons)
+				{
+					button->handleKey((Button::ButtonEvent) Button::PRESS, KEY_RIGHT);
+					button->handleKey((Button::ButtonEvent) Button::RELEASE, KEY_RIGHT);
+				}
+			}
 		}
 	}
 	if (readSize == -1 && errno != EAGAIN && errno != EINTR)
