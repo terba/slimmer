@@ -45,11 +45,21 @@ Controller::Controller()
 	mButtons.push_back(new Button(this, KEY_BACKSPACE, BACK, BACKLONG));
 	mButtons.push_back(new Button(this, KEY_SPACE, FORWARD));
 
-	if ((mInputDeviceFileDescriptor = open(Config::inputDeviceFile().c_str(), O_RDONLY | O_NONBLOCK)) == -1)
-		throw ErrorInput("Can not open device file " + Config::inputDeviceFile());
+	for (string const i_file : Config::inputDeviceFiles())
+	{
+		int temp;
+		if ((temp = open(i_file.c_str(), O_RDONLY | O_NONBLOCK)) == -1)
+			throw ErrorInput("Can not open device file " + i_file);
+		mInputDeviceFileDescriptors.push_back(temp);
+	}
 
-	mInputDeviceIo.set<Controller, &Controller::readInput>(this);
-	mInputDeviceIo.start(mInputDeviceFileDescriptor, ev::READ);
+	for (int const i_fd : mInputDeviceFileDescriptors)
+	{
+		ev::io* mInputDeviceIoP = new ev::io();
+		mInputDeviceIoP->set<Controller, &Controller::readInput>(this);
+		mInputDeviceIoP->start(i_fd, ev::READ);
+		mInputDevicesIo.push_back(mInputDeviceIoP);
+	}
 
 	mStatusUpdateTimer.set<Controller, &Controller::updateStatus>(this);
 	mStatusUpdateTimer.start(Config::cPlayerStatusQueryInterval, Config::cPlayerStatusQueryInterval);
@@ -80,12 +90,17 @@ Controller::Controller()
 
 Controller::~Controller()
 {
-	mInputDeviceIo.stop();
+	for (ev::io* mInputDevice : mInputDevicesIo)
+	{
+		mInputDevice->stop();
+		delete mInputDevice;
+	}
 	mStatusUpdateTimer.stop();
 	mVolumeScreenHideTimer.stop();
 	mMenuScreenHideTimer.stop();
 	mStandbyTimer.stop();
-	close(mInputDeviceFileDescriptor);
+	for (int i_fd : mInputDeviceFileDescriptors)
+		close(i_fd);
 	for (Button* button : mButtons) delete button;
 }
 
@@ -375,42 +390,46 @@ void Controller::readInput(ev::io& w, int revents)
 	struct input_event inputEvent;
 	int readSize;
 
-	while ((readSize = read(mInputDeviceFileDescriptor, &inputEvent, sizeof(inputEvent))) > 0)
+	for (int const i_fd : mInputDeviceFileDescriptors)
 	{
-		if (readSize == sizeof(inputEvent) && inputEvent.type == EV_KEY && (inputEvent.value == 1 || inputEvent.value == 0 || inputEvent.value == 2))
+		while ((readSize = read(i_fd, &inputEvent, sizeof(inputEvent))) > 0)
 		{
-			Button::ButtonEvent buttonEvent = inputEvent.value == 1 ? Button::PRESS : inputEvent.value == 0 ? Button::RELEASE : Button::REPEAT;
-			for (Button* const button : mButtons)
-				button->handleKey(buttonEvent, inputEvent.code);
-		} else if (readSize == sizeof(inputEvent) && inputEvent.type == EV_REL && (inputEvent.value == 1 || inputEvent.value == -1))
-		{
-			if (Config::verbose())
-				cout << "Matched EV_SYN event. inputEvent.value=" << inputEvent.value << " inputEvent.code=" << inputEvent.code << endl;
-			if (inputEvent.value == 1)
+			if (readSize == sizeof(inputEvent) && inputEvent.type == EV_KEY && (inputEvent.value == 1 || inputEvent.value == 0 || inputEvent.value == 2))
+			{
+				Button::ButtonEvent buttonEvent = inputEvent.value == 1 ? Button::PRESS : inputEvent.value == 0 ? Button::RELEASE : Button::REPEAT;
+				for (Button* const button : mButtons)
+					button->handleKey(buttonEvent, inputEvent.code);
+			} else if (readSize == sizeof(inputEvent) && inputEvent.type == EV_REL && (inputEvent.value == 1 || inputEvent.value == -1))
 			{
 				if (Config::verbose())
-					cout << "Matched inputEvent.value == 1" << endl;
-				for (Button* const button : mButtons)
+					cout << "Matched EV_SYN event. inputEvent.value=" << inputEvent.value << " inputEvent.code=" << inputEvent.code << endl;
+				if (inputEvent.value == 1)
 				{
-					button->handleKey((Button::ButtonEvent) Button::PRESS, KEY_LEFT);
-					button->handleKey((Button::ButtonEvent) Button::RELEASE, KEY_LEFT);
-				}
-			} else if (inputEvent.value == -1)
-			{
-				if (Config::verbose())
-					cout << "Matched inputEvent.value == -1" << endl;
-				for (Button* const button : mButtons)
+					if (Config::verbose())
+						cout << "Matched inputEvent.value == 1" << endl;
+					for (Button* const button : mButtons)
+					{
+						button->handleKey((Button::ButtonEvent) Button::PRESS, KEY_LEFT);
+						button->handleKey((Button::ButtonEvent) Button::RELEASE, KEY_LEFT);
+					}
+				} else if (inputEvent.value == -1)
 				{
-					button->handleKey((Button::ButtonEvent) Button::PRESS, KEY_RIGHT);
-					button->handleKey((Button::ButtonEvent) Button::RELEASE, KEY_RIGHT);
+					if (Config::verbose())
+						cout << "Matched inputEvent.value == -1" << endl;
+					for (Button* const button : mButtons)
+					{
+						button->handleKey((Button::ButtonEvent) Button::PRESS, KEY_RIGHT);
+						button->handleKey((Button::ButtonEvent) Button::RELEASE, KEY_RIGHT);
+					}
 				}
 			}
 		}
+		if (readSize == -1 && errno != EAGAIN && errno != EINTR)
+		{
+			cerr << "[ERROR] Input device read error" << endl;
+		}
 	}
-	if (readSize == -1 && errno != EAGAIN && errno != EINTR)
-	{
-		cerr << "[ERROR] Input device read error" << endl;
-	}
+
 }
 
 void Controller::actionShowQueue(MenuItem& selected)

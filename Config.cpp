@@ -52,7 +52,7 @@ int Config::mLcdPort;
 string Config::mPlayerId;
 bool Config::mFixedVolume;
 int Config::mVolume;
-string Config::mInputDeviceFile;
+vector<string> Config::mInputDeviceFiles;
 string Config::mEncoding;
 int Config::mScrollSpeed;
 
@@ -72,7 +72,7 @@ int Config::processOptions(int argc, char* argv[])
 	ValueArg<string> macArg("m", "mac", "the player's MAC address (default: automatic, first interface)", false, "", "AA:BB:CC:DD:EE:FF");
 	SwitchArg fixedvolumeArg("f", "fixedvolume", "volume control disabled", false);
 	ValueArg<int> volumeArg("o", "volume", "set volume on startup", false, -1, "0-100");
-	ValueArg<string> inputArg("i", "input", "keyboard input device file (default: /dev/input/event0)", false, "/dev/input/event0", "input device file");
+	ValueArg<string> inputArg("i", "input", "keyboard input device file(s). Use comma to delimit multiple input files. (default: /dev/input/event0)", false, "/dev/input/event0", "input device file");
 	ValueArg<string> encodingArg("e", "encoding", "the LCD's character encoding (default: ISO-8859-1)", false, "ISO-8859-1", "single-byte encoding");
 	ValueArg<int> scrollspeedArg("c", "scrollspeed", "text scrolling speed (default: 3)", false, 3, "0-10");
 
@@ -98,7 +98,20 @@ int Config::processOptions(int argc, char* argv[])
 	mPlayerId = macArg.getValue();
 	mFixedVolume = fixedvolumeArg.getValue();
 	mVolume = volumeArg.getValue();
-	mInputDeviceFile = inputArg.getValue();
+
+	// Save string to stream. Pull off chunks, broken up by ','
+	std::stringstream unparsed_data(inputArg.getValue());
+	while(unparsed_data.good()) {
+		std::string substr;
+		std::getline(unparsed_data, substr, ',');
+		mInputDeviceFiles.push_back(substr);
+	}
+	if (Config::verbose())
+	{
+		for (string const i_file : mInputDeviceFiles)
+			cout << "found device input file: " << i_file << endl;
+	}
+
 	mEncoding = encodingArg.getValue();
 	mScrollSpeed = scrollspeedArg.getValue();
 

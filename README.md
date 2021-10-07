@@ -76,7 +76,7 @@ Where:
      set volume on startup
 
    -i <input device file>,  --input <input device file>
-     keyboard input device file (default: /dev/input/event0)
+     keyboard input device file(s). Use comma to delimit multiple input files. (default: /dev/input/event0)
 
    -e <single-byte encoding>,  --encoding <single-byte encoding>
      the LCD's character encoding (default: ISO-8859-1)
