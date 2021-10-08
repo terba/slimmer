@@ -37,6 +37,7 @@ public:
 	const int static lcdPort() { return mLcdPort; }
 	const string static playerId() { return mPlayerId; }
 	const bool static fixedVolume() { return mFixedVolume; }
+	const bool static backMenus() { return mBackMenus; }
 	const int static volume() { return mVolume; }
 	const vector<string> static inputDeviceFiles() { return mInputDeviceFiles; }
 	const string static encoding() { return mEncoding; }
@@ -68,6 +69,7 @@ protected:
 	int static mLcdPort;
 	string static mPlayerId;
 	bool static mFixedVolume;
+	bool static mBackMenus;
 	int static mVolume;
 	vector<string> static mInputDeviceFiles;
 	string static mEncoding;

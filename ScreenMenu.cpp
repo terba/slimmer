@@ -17,6 +17,7 @@
 */
 
 #include "ScreenMenu.h"
+#include "Config.h"
 #include <iostream>
 
 ScreenMenu::ScreenMenu(LCDClient* parent, const string& serverVersion) : Screen(parent, "Menu", "Menu"), mMenu("", MenuItem::MENU, "Main")
@@ -32,8 +33,12 @@ ScreenMenu::ScreenMenu(LCDClient* parent, const string& serverVersion) : Screen(
 	}
 
 	// Creating the menu structure
+	if (Config::backMenus())
+		mMenu.addItem(MenuItem("", MenuItem::BACK, "Back"));
 	mMenu.addItem(MenuItem("", MenuItem::QUEUE, "Playing queue", true));
 	mMenu.addItem(MenuItem("", MenuItem::MENU, "Music library"));
+	if (Config::backMenus())
+		mMenu.item(mMenu.itemCount() -1).addItem(MenuItem("", MenuItem::BACK, "Back"));
 	if (serverVersion >= "7.9.0")
 		mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::ALBUMARTISTS, "Album Artists"));
 	mMenu.item(mMenu.itemCount() - 1).addItem(MenuItem("", MenuItem::ARTISTS, serverVersion >= "7.9.0" ? "All Artists" : "Artists"));
@@ -138,13 +143,31 @@ void ScreenMenu::update()
 	if (mPath.back()->itemCount() < mPath.back()->top() + height() && mPath.back()->top() > 0)
 		mPath.back()->setTop(mPath.back()->itemCount() - height());
 
+	int j = 0;
 	for (int i = 0; i < height(); i++)
 	{
 		string s;
 		if (mPath.back()->top() + i < mPath.back()->itemCount())
 		{
 			s = mPath.back()->top() + i == mPath.back()->selected() ? mPrefixSelected : mPrefixNotSelected;
-			if (mPath.back()->numbering()) s+= std::to_string(mPath.back()->top() + i + 1) + " ";
+			if (mPath.back()->numbering())
+			{
+				if (Config::backMenus())
+				{
+					if ((mPath.back()->item(mPath.back()->top() + i).name() == "Back") && (i == 0))
+					{
+						s+= "  ";
+					}
+					else
+					{
+						s+= std::to_string(mPath.back()->top() + j++ + 1) + " ";
+					}
+				} else
+				{
+					s+= std::to_string(mPath.back()->top() + i + 1) + " ";
+				}
+
+			}
 			if (mPath.back()->top() + i < mPath.back()->itemCount())
 				s += mPath.back()->item(mPath.back()->top() + i).name();
 		}

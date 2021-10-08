@@ -250,6 +250,15 @@ void Controller::handleEvent(const Event event)
 				case MenuItem::TRACK:
 					actionLoad(selected, Server::LOAD);
 					break;
+				case MenuItem::BACK:
+					if (mMenuScreen.level() == 1)
+					{
+						mMenuScreenHideTimer.stop();
+						mMenuScreen.hide();
+					}
+					else
+						mMenuScreen.back();
+					break;
 				default:
 					mMenuScreen.select();
 				}
@@ -297,6 +306,10 @@ void Controller::handleEvent(const Event event)
 				case MenuItem::TRACK:
 				case MenuItem::FOLDER:
 					actionLoad(selected, Server::LOAD);
+					break;
+				case MenuItem::BACK:
+					mMenuScreenHideTimer.stop();
+					mMenuScreen.hide();
 					break;
 				default:
 					mMenuScreen.select();
@@ -439,6 +452,8 @@ void Controller::actionShowQueue(MenuItem& selected)
 	if (mPlayer.playlist().size())
 	{
 		selected.clearItems();
+		if (Config::backMenus())
+			selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 		for (int i = 0; i < mPlayer.playlist().size(); i++)
 			selected.addItem(MenuItem(std::to_string(i), MenuItem::QUEUEITEM, mPlayer.playlist()[i]["title"].asString()));
 		mMenuScreen.select();
@@ -459,6 +474,8 @@ void Controller::actionShowArtists(MenuItem& selected)
 	mMenuScreen.progressOn();
 	Json::Value artists = mServer.artists(selected.type() == MenuItem::ALBUMARTISTS);
 	selected.clearItems();
+	if (Config::backMenus())
+		selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 	for (int i = 0; i < artists.size(); i++)
 		selected.addItem(MenuItem(artists[i]["id"].asString(), MenuItem::ARTIST, artists[i]["artist"].asString()));
 	mMenuScreen.select();
@@ -470,6 +487,8 @@ void Controller::actionShowAlbums(MenuItem& selected)
 	mMenuScreen.progressOn();
 	Json::Value albums = mServer.albums();
 	selected.clearItems();
+	if (Config::backMenus())
+		selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 	for (int i = 0; i < albums.size(); i++)
 		selected.addItem(MenuItem(albums[i]["id"].asString(), MenuItem::ALBUM, albums[i]["album"].asString(), true));
 	mMenuScreen.select();
@@ -481,6 +500,8 @@ void Controller::actionShowNewMusic(MenuItem& selected)
 	mMenuScreen.progressOn();
 	Json::Value albums = mServer.newAlbums();
 	selected.clearItems();
+	if (Config::backMenus())
+		selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 	for (int i = 0; i < albums.size(); i++)
 		selected.addItem(MenuItem(albums[i]["id"].asString(), MenuItem::ALBUM, albums[i]["album"].asString(), true));
 	mMenuScreen.select();
@@ -492,6 +513,8 @@ void Controller::actionShowFolder(MenuItem& selected)
 	mMenuScreen.progressOn();
 	Json::Value folders = mServer.folders(selected.id());
 	selected.clearItems();
+	if (Config::backMenus())
+		selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 	for (int i = 0; i < folders.size(); i++)
 		selected.addItem(MenuItem(folders[i]["id"].asString(), folders[i]["type"] == "folder" ? MenuItem::FOLDER : MenuItem::TRACK, folders[i]["filename"].asString()));
 	mMenuScreen.select();
@@ -503,6 +526,8 @@ void Controller::actionShowFavorites(MenuItem& selected)
 	mMenuScreen.progressOn();
 	Json::Value favorites = mServer.favorites();
 	selected.clearItems();
+	if (Config::backMenus())
+		selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 	for (int i = 0; i < favorites.size(); i++)
 		selected.addItem(MenuItem(favorites[i]["id"].asString(), MenuItem::FAVORITE, favorites[i]["name"].asString()));
 	mMenuScreen.select();
@@ -524,6 +549,8 @@ void Controller::actionShowRadios(MenuItem& selected)
 		{
 			Json::Value radios = mServer.radioPlugins();
 			selected.clearItems();
+			if (Config::backMenus())
+				selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 			for (int i = 0; i < radios.size(); i++)
 				if (radios[i]["type"] == "xmlbrowser")
 					selected.addItem(MenuItem(radios[i]["cmd"].asString(), MenuItem::RADIOPLUGIN, radios[i]["name"].asString()));
@@ -532,6 +559,8 @@ void Controller::actionShowRadios(MenuItem& selected)
 		{
 			Json::Value radios = mPlayer.radios(selected.id());
 			selected.clearItems();
+			if (Config::backMenus())
+				selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 			for (int i = 0; i < radios.size(); i++)
 				selected.addItem(MenuItem(radios[i]["id"].asString(), MenuItem::RADIOMENU, radios[i]["name"].asString()));
 		} break;
@@ -539,6 +568,8 @@ void Controller::actionShowRadios(MenuItem& selected)
 		{
 			Json::Value radios = mPlayer.radios(mMenuScreen.pathItem(2).id(), selected.id());
 			selected.clearItems();
+			if (Config::backMenus())
+				selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 			for (int i = 0; i < radios.size(); i++)
 				selected.addItem(MenuItem(radios[i]["id"].asString(),
 								radios[i]["hasitems"].asInt() == 1 ? MenuItem::RADIOMENU : MenuItem::RADIO,
@@ -560,6 +591,8 @@ void Controller::actionShowArtistAlbums(MenuItem& selected)
 	mMenuScreen.progressOn();
 	Json::Value albums = mServer.albums(selected.id());
 	selected.clearItems();
+	if (Config::backMenus())
+		selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 	for (int i = 0; i < albums.size(); i++)
 		selected.addItem(MenuItem(albums[i]["id"].asString(), MenuItem::ALBUM, albums[i]["album"].asString(), true));
 	mMenuScreen.select();
@@ -571,6 +604,8 @@ void Controller::actionShowAlbumTracks(MenuItem& selected)
 	mMenuScreen.progressOn();
 	Json::Value tracks = mServer.tracks(selected.id());
 	selected.clearItems();
+	if (Config::backMenus())
+		selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 	for (int i = 0; i < tracks.size(); i++)
 		selected.addItem(MenuItem(tracks[i]["id"].asString(), MenuItem::TRACK, tracks[i]["title"].asString()));
 	mMenuScreen.select();

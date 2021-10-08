@@ -46,7 +46,8 @@ public:
 		TRACKS,
 		ARTIST,
 		ALBUM,
-		TRACK
+		TRACK,
+		BACK
 	};
 
 	MenuItem(const string& id, const Type type, const string& name, const bool numbering = false);

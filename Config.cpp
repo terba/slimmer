@@ -51,6 +51,7 @@ string Config::mLcdHost;
 int Config::mLcdPort;
 string Config::mPlayerId;
 bool Config::mFixedVolume;
+bool Config::mBackMenus;
 int Config::mVolume;
 vector<string> Config::mInputDeviceFiles;
 string Config::mEncoding;
@@ -71,6 +72,7 @@ int Config::processOptions(int argc, char* argv[])
 	ValueArg<int> lcdportArg("P", "lcdport", "lcdproc port (default: 13666)", false, 13666, "number");
 	ValueArg<string> macArg("m", "mac", "the player's MAC address (default: automatic, first interface)", false, "", "AA:BB:CC:DD:EE:FF");
 	SwitchArg fixedvolumeArg("f", "fixedvolume", "volume control disabled", false);
+	SwitchArg backmenusArg("b", "backmenus", "include selectable 'back' item in all menu navigation contexts", false);
 	ValueArg<int> volumeArg("o", "volume", "set volume on startup", false, -1, "0-100");
 	ValueArg<string> inputArg("i", "input", "keyboard input device file(s). Use comma to delimit multiple input files. (default: /dev/input/event0)", false, "/dev/input/event0", "input device file");
 	ValueArg<string> encodingArg("e", "encoding", "the LCD's character encoding (default: ISO-8859-1)", false, "ISO-8859-1", "single-byte encoding");
@@ -81,6 +83,7 @@ int Config::processOptions(int argc, char* argv[])
 	cmd.add(inputArg);
 	cmd.add(volumeArg);
 	cmd.add(fixedvolumeArg);
+	cmd.add(backmenusArg);
 	cmd.add(macArg);
 	cmd.add(lcdportArg);
 	cmd.add(lcdhostArg);
@@ -97,6 +100,7 @@ int Config::processOptions(int argc, char* argv[])
 	mLcdPort = lcdportArg.getValue();
 	mPlayerId = macArg.getValue();
 	mFixedVolume = fixedvolumeArg.getValue();
+	mBackMenus = backmenusArg.getValue();
 	mVolume = volumeArg.getValue();
 
 	// Save string to stream. Pull off chunks, broken up by ','
