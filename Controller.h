@@ -1,6 +1,7 @@
 /*
 	Controller.h - Slimmer
-	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
+	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu): Original Implmentation
+	Copyright (C) 2021  Aaron White <w531t4@gmail.com>: Added Seek capability
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -31,6 +32,7 @@
 #include "ScreenError.h"
 #include "ScreenMenu.h"
 #include "ScreenVolume.h"
+#include "ScreenSeek.h"
 
 class Controller : public EventHandler
 {
@@ -43,6 +45,7 @@ public:
 protected:
 	void updateStatus(ev::timer& w, int revents);
 	void readInput(ev::io& w, int revents);
+	void hideSeekScreen();
 	void hideVolumeScreen();
 	void hideMenuScreen();
 	void showPopup(const std::string message);
@@ -79,11 +82,13 @@ protected:
 	ScreenError mErrorScreen;
 	ScreenMenu mMenuScreen;
 	ScreenVolume mVolumeScreen;
+	ScreenSeek mSeekScreen;
 
 	vector<ev::io*> mInputDevicesIo;
 
 	ev::timer mStatusUpdateTimer;
 	ev::timer mVolumeScreenHideTimer;
+	ev::timer mSeekScreenHideTimer;
 	ev::timer mMenuScreenHideTimer;
 	ev::timer mPopupHideTimer;
 	ev::timer mStandbyTimer;

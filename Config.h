@@ -1,6 +1,7 @@
 /*
 	Config.h - Slimmer
-	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
+	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu): Original Implmentation
+	Copyright (C) 2021  Aaron White <w531t4@gmail.com>: Added Seek capability
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -52,10 +53,12 @@ public:
 	static const double cPlayerStatusQueryInterval; // Double in seconds
 	static const double cPlayerStatusQueryIntervalInStandby; // Double in seconds
 	static const double cVolumeScreenHideDelay; // Double in seconds
+	static const double cSeekScreenHideDelay; // Double in seconds
 	static const double cMenuScreenHideDelay; // Double in seconds
 	static const double cPopupHideDelay; // Double in seconds
 	static const double cButtonLongPressTime; // Double in seconds
 	static const short int cVolumeStep; // In percent
+	static const short int cSeekStep; // In percent
 	static const short int cNewMusicItems;
 	static const short int cTrackRestartLimit; // In seconds
 	static const double cStandbyTimeout; // Double in seconds

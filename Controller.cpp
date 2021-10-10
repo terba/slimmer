@@ -1,6 +1,7 @@
 /*
 	Controller.cpp - Slimmer
-	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
+	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu): Original Implmentation
+	Copyright (C) 2021  Aaron White <w531t4@gmail.com>: Added Seek capability
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -33,7 +34,8 @@ Controller::Controller()
 	  mErrorScreen(&mLcd),
 	  mMenuScreen(&mLcd, mServer.version()),
 	  mPlayer(Config::playerId(), mServer),
-	  mVolumeScreen(&mLcd)
+	  mVolumeScreen(&mLcd),
+	  mSeekScreen(&mLcd)
 {
 	// We disable syncing in LCDAPI, so it will not wait for command completion and response from LCDd.
 	// Refreshing the display is many times faster with this, so fast browsing in the menus is now OK.
@@ -65,6 +67,7 @@ Controller::Controller()
 	mStatusUpdateTimer.start(Config::cPlayerStatusQueryInterval, Config::cPlayerStatusQueryInterval);
 
 	mVolumeScreenHideTimer.set<Controller, &Controller::hideVolumeScreen>(this);
+	mSeekScreenHideTimer.set<Controller, &Controller::hideSeekScreen>(this);
 	mMenuScreenHideTimer.set<Controller, &Controller::hideMenuScreen>(this);
 	mPopupHideTimer.set<Controller, &Controller::hidePopup>(this);
 
@@ -97,6 +100,7 @@ Controller::~Controller()
 	}
 	mStatusUpdateTimer.stop();
 	mVolumeScreenHideTimer.stop();
+	mSeekScreenHideTimer.stop();
 	mMenuScreenHideTimer.stop();
 	mStandbyTimer.stop();
 	for (int i_fd : mInputDeviceFileDescriptors)
@@ -157,8 +161,16 @@ void Controller::handleEvent(const Event event)
 
 	try
 	{
+		// Seek management
+		if ((event == LEFT || event == RIGHT) && mSeekScreen.visible())
+		{
+			int position = event == LEFT ? mPlayer.seekBehind() : mPlayer.seekAhead();
+			mSeekScreen.update(position);
+			mSeekScreenHideTimer.start(Config::cSeekScreenHideDelay);
+		}
+
 		// Volume management
-		if (!Config::fixedVolume() && (event == LEFT || event == RIGHT) && !mMenuScreen.visible())
+		if (!Config::fixedVolume() && (event == LEFT || event == RIGHT) && !mMenuScreen.visible() && !mSeekScreen.visible())
 		{
 			int volume = event == LEFT ? mPlayer.decreaseVolume() : mPlayer.increaseVolume();
 			mVolumeScreen.update(volume);
@@ -171,8 +183,15 @@ void Controller::handleEvent(const Event event)
 		if (!mMenuScreen.visible() && event == SELECT)
 		{
 			if (mVolumeScreen.visible()) mVolumeScreen.hide();
-			mMenuScreen.show();
-			mMenuScreenHideTimer.start(Config::cMenuScreenHideDelay);
+			if (mSeekScreen.visible())
+			{
+				mSeekScreenHideTimer.stop();
+				mPlayer.seek(mPlayer.timetarget());
+				mSeekScreen.hide();
+			} else {
+				mMenuScreen.show();
+				mMenuScreenHideTimer.start(Config::cMenuScreenHideDelay);
+			}
 		}
 
 		// Prev/Next song
@@ -258,6 +277,15 @@ void Controller::handleEvent(const Event event)
 					}
 					else
 						mMenuScreen.back();
+					break;
+				case MenuItem::SEEK:
+					mSeekScreen.update((mPlayer.seekReset() * 100) / mPlayer.duration());
+					if (!mSeekScreen.visible())
+					{
+						mMenuScreen.hide();
+						mSeekScreen.show();
+					}
+					mSeekScreenHideTimer.start(Config::cSeekScreenHideDelay);
 					break;
 				default:
 					mMenuScreen.select();
@@ -362,6 +390,11 @@ void Controller::handleEvent(const Event event)
 void Controller::hideVolumeScreen()
 {
 	mVolumeScreen.hide();
+}
+
+void Controller::hideSeekScreen()
+{
+	mSeekScreen.hide();
 }
 
 void Controller::hideMenuScreen()

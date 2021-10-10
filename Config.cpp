@@ -1,6 +1,7 @@
 /*
 	Config.cpp - Slimmer
-	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
+	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu): Original Implmentation
+	Copyright (C) 2021  Aaron White <w531t4@gmail.com>: Added Seek capability
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -35,10 +36,12 @@ const short int Config::cRetryDelay = 1;
 const double Config::cPlayerStatusQueryInterval = 0.5;
 const double Config::cPlayerStatusQueryIntervalInStandby = 3;
 const double Config::cVolumeScreenHideDelay = 1;
+const double Config::cSeekScreenHideDelay = 2;
 const double Config::cMenuScreenHideDelay = 8;
 const double Config::cPopupHideDelay = 0.6;
 const double Config::cButtonLongPressTime = 0.4;
 const short int Config::cVolumeStep = 2;
+const short int Config::cSeekStep = 1;
 const short int Config::cNewMusicItems = 100;
 const short int Config::cTrackRestartLimit = 3;
 const double Config::cStandbyTimeout = 30;

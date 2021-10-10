@@ -1,6 +1,7 @@
 /*
 	Player.h - Slimmer
-	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
+	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu): Original Implmentation
+	Copyright (C) 2021  Aaron White <w531t4@gmail.com>: Added Seek capability
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -37,6 +38,11 @@ public:
 	int increaseVolume();
 	int decreaseVolume();
 
+	void seek(const double position);
+	int seekReset();
+	int seekAhead();
+	int seekBehind();
+
 	void next();
 	void previous();
 	void playPlaylistItem(const int index);
@@ -64,6 +70,7 @@ public:
 	string title() const { return mTitle; }
 	float duration() const { return mDuration; }
 	float time() const { return mTime; }
+	double timetarget() const { return mTimeTarget; }
 
 	int volume() const { return mVolume; }
 	int repeat() const { return mRepeat; }
@@ -88,6 +95,7 @@ protected:
 	string mTitle;
 	float mDuration;
 	float mTime;
+	double mTimeTarget;
 
 	int mVolume;
 	int mRepeat;

@@ -1,6 +1,7 @@
 /*
 	Player.cpp - Slimmer
-	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
+	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu): Original Implmentation
+	Copyright (C) 2021  Aaron White <w531t4@gmail.com>: Added Seek capability
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -95,6 +96,34 @@ int Player::decreaseVolume()
 	mVolume -= Config::cVolumeStep;
 	if (mVolume < 0) mVolume = 0;
 	return mVolume;
+}
+
+void Player::seek(const double position)
+{
+	mServer.setPlayerSeek(mId, std::to_string(position));
+}
+
+int Player::seekReset()
+{
+	mTimeTarget = mTime;
+	return mTimeTarget;
+}
+int Player::seekAhead()
+{
+	const double translated_step = (mDuration * Config::cSeekStep) / 100;
+	mTimeTarget += translated_step;
+	const int percent = (mTimeTarget * 100) / mDuration;
+	if (percent > 100) mTimeTarget = mDuration;
+	return percent;
+}
+
+int Player::seekBehind()
+{
+	const double translated_step = (mDuration * Config::cSeekStep) / 100;
+	mTimeTarget -= translated_step;
+	const int percent = (mTimeTarget * 100) / mDuration;
+	if (mTimeTarget < 0) mTimeTarget = 0;
+	return percent;
 }
 
 void Player::next()

@@ -1,6 +1,7 @@
 /*
 	ScreenMenu.cpp - Slimmer
-	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
+	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu): Original Implmentation
+	Copyright (C) 2021  Aaron White <w531t4@gmail.com>: Added Seek capability
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -36,6 +37,7 @@ ScreenMenu::ScreenMenu(LCDClient* parent, const string& serverVersion) : Screen(
 	if (Config::backMenus())
 		mMenu.addItem(MenuItem("", MenuItem::BACK, "Back"));
 	mMenu.addItem(MenuItem("", MenuItem::QUEUE, "Playing queue", true));
+	mMenu.addItem(MenuItem("", MenuItem::SEEK, "Seek w/in Song"));
 	mMenu.addItem(MenuItem("", MenuItem::MENU, "Music library"));
 	if (Config::backMenus())
 		mMenu.item(mMenu.itemCount() -1).addItem(MenuItem("", MenuItem::BACK, "Back"));
@@ -97,7 +99,7 @@ void ScreenMenu::navigateDown()
 }
 
 void ScreenMenu::select()
-{	
+{
 	if (mPath.back()->selectedItem().hasItem())
 	{
 		mPath.push_back(&(mPath.back()->selectedItem()));
