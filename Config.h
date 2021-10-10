@@ -1,6 +1,7 @@
 /*
 	Config.h - Slimmer
-	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
+	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu): Original Implmentation
+	Copyright (C) 2021  Aaron White <w531t4@gmail.com>: Added Seek capability
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -20,6 +21,7 @@
 #define CONFIG_H
 
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -36,8 +38,9 @@ public:
 	const int static lcdPort() { return mLcdPort; }
 	const string static playerId() { return mPlayerId; }
 	const bool static fixedVolume() { return mFixedVolume; }
+	const bool static backMenus() { return mBackMenus; }
 	const int static volume() { return mVolume; }
-	const string static inputDeviceFile() { return mInputDeviceFile; }
+	const vector<string> static inputDeviceFiles() { return mInputDeviceFiles; }
 	const string static encoding() { return mEncoding; }
 	const int static scrollSpeed() { return mScrollSpeed; }
 
@@ -50,10 +53,12 @@ public:
 	static const double cPlayerStatusQueryInterval; // Double in seconds
 	static const double cPlayerStatusQueryIntervalInStandby; // Double in seconds
 	static const double cVolumeScreenHideDelay; // Double in seconds
+	static const double cSeekScreenHideDelay; // Double in seconds
 	static const double cMenuScreenHideDelay; // Double in seconds
 	static const double cPopupHideDelay; // Double in seconds
 	static const double cButtonLongPressTime; // Double in seconds
 	static const short int cVolumeStep; // In percent
+	static const short int cSeekStep; // In percent
 	static const short int cNewMusicItems;
 	static const short int cTrackRestartLimit; // In seconds
 	static const double cStandbyTimeout; // Double in seconds
@@ -67,8 +72,9 @@ protected:
 	int static mLcdPort;
 	string static mPlayerId;
 	bool static mFixedVolume;
+	bool static mBackMenus;
 	int static mVolume;
-	string static mInputDeviceFile;
+	vector<string> static mInputDeviceFiles;
 	string static mEncoding;
 	int static mScrollSpeed;
 };

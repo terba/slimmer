@@ -1,6 +1,7 @@
 /*
 	Controller.cpp - Slimmer
-	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
+	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu): Original Implmentation
+	Copyright (C) 2021  Aaron White <w531t4@gmail.com>: Added Seek capability
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -33,7 +34,8 @@ Controller::Controller()
 	  mErrorScreen(&mLcd),
 	  mMenuScreen(&mLcd, mServer.version()),
 	  mPlayer(Config::playerId(), mServer),
-	  mVolumeScreen(&mLcd)
+	  mVolumeScreen(&mLcd),
+	  mSeekScreen(&mLcd)
 {
 	// We disable syncing in LCDAPI, so it will not wait for command completion and response from LCDd.
 	// Refreshing the display is many times faster with this, so fast browsing in the menus is now OK.
@@ -45,16 +47,27 @@ Controller::Controller()
 	mButtons.push_back(new Button(this, KEY_BACKSPACE, BACK, BACKLONG));
 	mButtons.push_back(new Button(this, KEY_SPACE, FORWARD));
 
-	if ((mInputDeviceFileDescriptor = open(Config::inputDeviceFile().c_str(), O_RDONLY | O_NONBLOCK)) == -1)
-		throw ErrorInput("Can not open device file " + Config::inputDeviceFile());
+	for (string const i_file : Config::inputDeviceFiles())
+	{
+		int temp;
+		if ((temp = open(i_file.c_str(), O_RDONLY | O_NONBLOCK)) == -1)
+			throw ErrorInput("Can not open device file " + i_file);
+		mInputDeviceFileDescriptors.push_back(temp);
+	}
 
-	mInputDeviceIo.set<Controller, &Controller::readInput>(this);
-	mInputDeviceIo.start(mInputDeviceFileDescriptor, ev::READ);
+	for (int const i_fd : mInputDeviceFileDescriptors)
+	{
+		ev::io* mInputDeviceIoP = new ev::io();
+		mInputDeviceIoP->set<Controller, &Controller::readInput>(this);
+		mInputDeviceIoP->start(i_fd, ev::READ);
+		mInputDevicesIo.push_back(mInputDeviceIoP);
+	}
 
 	mStatusUpdateTimer.set<Controller, &Controller::updateStatus>(this);
 	mStatusUpdateTimer.start(Config::cPlayerStatusQueryInterval, Config::cPlayerStatusQueryInterval);
 
 	mVolumeScreenHideTimer.set<Controller, &Controller::hideVolumeScreen>(this);
+	mSeekScreenHideTimer.set<Controller, &Controller::hideSeekScreen>(this);
 	mMenuScreenHideTimer.set<Controller, &Controller::hideMenuScreen>(this);
 	mPopupHideTimer.set<Controller, &Controller::hidePopup>(this);
 
@@ -80,12 +93,18 @@ Controller::Controller()
 
 Controller::~Controller()
 {
-	mInputDeviceIo.stop();
+	for (ev::io* mInputDevice : mInputDevicesIo)
+	{
+		mInputDevice->stop();
+		delete mInputDevice;
+	}
 	mStatusUpdateTimer.stop();
 	mVolumeScreenHideTimer.stop();
+	mSeekScreenHideTimer.stop();
 	mMenuScreenHideTimer.stop();
 	mStandbyTimer.stop();
-	close(mInputDeviceFileDescriptor);
+	for (int i_fd : mInputDeviceFileDescriptors)
+		close(i_fd);
 	for (Button* button : mButtons) delete button;
 }
 
@@ -142,8 +161,16 @@ void Controller::handleEvent(const Event event)
 
 	try
 	{
+		// Seek management
+		if ((event == LEFT || event == RIGHT) && mSeekScreen.visible())
+		{
+			int position = event == LEFT ? mPlayer.seekBehind() : mPlayer.seekAhead();
+			mSeekScreen.update(position);
+			mSeekScreenHideTimer.start(Config::cSeekScreenHideDelay);
+		}
+
 		// Volume management
-		if (!Config::fixedVolume() && (event == LEFT || event == RIGHT) && !mMenuScreen.visible())
+		if (!Config::fixedVolume() && (event == LEFT || event == RIGHT) && !mMenuScreen.visible() && !mSeekScreen.visible())
 		{
 			int volume = event == LEFT ? mPlayer.decreaseVolume() : mPlayer.increaseVolume();
 			mVolumeScreen.update(volume);
@@ -156,8 +183,15 @@ void Controller::handleEvent(const Event event)
 		if (!mMenuScreen.visible() && event == SELECT)
 		{
 			if (mVolumeScreen.visible()) mVolumeScreen.hide();
-			mMenuScreen.show();
-			mMenuScreenHideTimer.start(Config::cMenuScreenHideDelay);
+			if (mSeekScreen.visible())
+			{
+				mSeekScreenHideTimer.stop();
+				mPlayer.seek(mPlayer.timetarget());
+				mSeekScreen.hide();
+			} else {
+				mMenuScreen.show();
+				mMenuScreenHideTimer.start(Config::cMenuScreenHideDelay);
+			}
 		}
 
 		// Prev/Next song
@@ -235,6 +269,24 @@ void Controller::handleEvent(const Event event)
 				case MenuItem::TRACK:
 					actionLoad(selected, Server::LOAD);
 					break;
+				case MenuItem::BACK:
+					if (mMenuScreen.level() == 1)
+					{
+						mMenuScreenHideTimer.stop();
+						mMenuScreen.hide();
+					}
+					else
+						mMenuScreen.back();
+					break;
+				case MenuItem::SEEK:
+					mSeekScreen.update((mPlayer.seekReset() * 100) / mPlayer.duration());
+					if (!mSeekScreen.visible())
+					{
+						mMenuScreen.hide();
+						mSeekScreen.show();
+					}
+					mSeekScreenHideTimer.start(Config::cSeekScreenHideDelay);
+					break;
 				default:
 					mMenuScreen.select();
 				}
@@ -282,6 +334,10 @@ void Controller::handleEvent(const Event event)
 				case MenuItem::TRACK:
 				case MenuItem::FOLDER:
 					actionLoad(selected, Server::LOAD);
+					break;
+				case MenuItem::BACK:
+					mMenuScreenHideTimer.stop();
+					mMenuScreen.hide();
 					break;
 				default:
 					mMenuScreen.select();
@@ -336,6 +392,11 @@ void Controller::hideVolumeScreen()
 	mVolumeScreen.hide();
 }
 
+void Controller::hideSeekScreen()
+{
+	mSeekScreen.hide();
+}
+
 void Controller::hideMenuScreen()
 {
 	mMenuScreen.hide();
@@ -375,19 +436,46 @@ void Controller::readInput(ev::io& w, int revents)
 	struct input_event inputEvent;
 	int readSize;
 
-	while ((readSize = read(mInputDeviceFileDescriptor, &inputEvent, sizeof(inputEvent))) > 0)
+	for (int const i_fd : mInputDeviceFileDescriptors)
 	{
-		if (readSize == sizeof(inputEvent) && inputEvent.type == EV_KEY && (inputEvent.value == 1 || inputEvent.value == 0 || inputEvent.value == 2))
+		while ((readSize = read(i_fd, &inputEvent, sizeof(inputEvent))) > 0)
 		{
-			Button::ButtonEvent buttonEvent = inputEvent.value == 1 ? Button::PRESS : inputEvent.value == 0 ? Button::RELEASE : Button::REPEAT;
-			for (Button* const button : mButtons)
-				button->handleKey(buttonEvent, inputEvent.code);
+			if (readSize == sizeof(inputEvent) && inputEvent.type == EV_KEY && (inputEvent.value == 1 || inputEvent.value == 0 || inputEvent.value == 2))
+			{
+				Button::ButtonEvent buttonEvent = inputEvent.value == 1 ? Button::PRESS : inputEvent.value == 0 ? Button::RELEASE : Button::REPEAT;
+				for (Button* const button : mButtons)
+					button->handleKey(buttonEvent, inputEvent.code);
+			} else if (readSize == sizeof(inputEvent) && inputEvent.type == EV_REL && (inputEvent.value == 1 || inputEvent.value == -1))
+			{
+				if (Config::verbose())
+					cout << "Matched EV_SYN event. inputEvent.value=" << inputEvent.value << " inputEvent.code=" << inputEvent.code << endl;
+				if (inputEvent.value == 1)
+				{
+					if (Config::verbose())
+						cout << "Matched inputEvent.value == 1" << endl;
+					for (Button* const button : mButtons)
+					{
+						button->handleKey((Button::ButtonEvent) Button::PRESS, KEY_LEFT);
+						button->handleKey((Button::ButtonEvent) Button::RELEASE, KEY_LEFT);
+					}
+				} else if (inputEvent.value == -1)
+				{
+					if (Config::verbose())
+						cout << "Matched inputEvent.value == -1" << endl;
+					for (Button* const button : mButtons)
+					{
+						button->handleKey((Button::ButtonEvent) Button::PRESS, KEY_RIGHT);
+						button->handleKey((Button::ButtonEvent) Button::RELEASE, KEY_RIGHT);
+					}
+				}
+			}
+		}
+		if (readSize == -1 && errno != EAGAIN && errno != EINTR)
+		{
+			cerr << "[ERROR] Input device read error" << endl;
 		}
 	}
-	if (readSize == -1 && errno != EAGAIN && errno != EINTR)
-	{
-		cerr << "[ERROR] Input device read error" << endl;
-	}
+
 }
 
 void Controller::actionShowQueue(MenuItem& selected)
@@ -397,6 +485,8 @@ void Controller::actionShowQueue(MenuItem& selected)
 	if (mPlayer.playlist().size())
 	{
 		selected.clearItems();
+		if (Config::backMenus())
+			selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 		for (int i = 0; i < mPlayer.playlist().size(); i++)
 			selected.addItem(MenuItem(std::to_string(i), MenuItem::QUEUEITEM, mPlayer.playlist()[i]["title"].asString()));
 		mMenuScreen.select();
@@ -417,6 +507,8 @@ void Controller::actionShowArtists(MenuItem& selected)
 	mMenuScreen.progressOn();
 	Json::Value artists = mServer.artists(selected.type() == MenuItem::ALBUMARTISTS);
 	selected.clearItems();
+	if (Config::backMenus())
+		selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 	for (int i = 0; i < artists.size(); i++)
 		selected.addItem(MenuItem(artists[i]["id"].asString(), MenuItem::ARTIST, artists[i]["artist"].asString()));
 	mMenuScreen.select();
@@ -428,6 +520,8 @@ void Controller::actionShowAlbums(MenuItem& selected)
 	mMenuScreen.progressOn();
 	Json::Value albums = mServer.albums();
 	selected.clearItems();
+	if (Config::backMenus())
+		selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 	for (int i = 0; i < albums.size(); i++)
 		selected.addItem(MenuItem(albums[i]["id"].asString(), MenuItem::ALBUM, albums[i]["album"].asString(), true));
 	mMenuScreen.select();
@@ -439,6 +533,8 @@ void Controller::actionShowNewMusic(MenuItem& selected)
 	mMenuScreen.progressOn();
 	Json::Value albums = mServer.newAlbums();
 	selected.clearItems();
+	if (Config::backMenus())
+		selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 	for (int i = 0; i < albums.size(); i++)
 		selected.addItem(MenuItem(albums[i]["id"].asString(), MenuItem::ALBUM, albums[i]["album"].asString(), true));
 	mMenuScreen.select();
@@ -450,6 +546,8 @@ void Controller::actionShowFolder(MenuItem& selected)
 	mMenuScreen.progressOn();
 	Json::Value folders = mServer.folders(selected.id());
 	selected.clearItems();
+	if (Config::backMenus())
+		selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 	for (int i = 0; i < folders.size(); i++)
 		selected.addItem(MenuItem(folders[i]["id"].asString(), folders[i]["type"] == "folder" ? MenuItem::FOLDER : MenuItem::TRACK, folders[i]["filename"].asString()));
 	mMenuScreen.select();
@@ -461,6 +559,8 @@ void Controller::actionShowFavorites(MenuItem& selected)
 	mMenuScreen.progressOn();
 	Json::Value favorites = mServer.favorites();
 	selected.clearItems();
+	if (Config::backMenus())
+		selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 	for (int i = 0; i < favorites.size(); i++)
 		selected.addItem(MenuItem(favorites[i]["id"].asString(), MenuItem::FAVORITE, favorites[i]["name"].asString()));
 	mMenuScreen.select();
@@ -482,6 +582,8 @@ void Controller::actionShowRadios(MenuItem& selected)
 		{
 			Json::Value radios = mServer.radioPlugins();
 			selected.clearItems();
+			if (Config::backMenus())
+				selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 			for (int i = 0; i < radios.size(); i++)
 				if (radios[i]["type"] == "xmlbrowser")
 					selected.addItem(MenuItem(radios[i]["cmd"].asString(), MenuItem::RADIOPLUGIN, radios[i]["name"].asString()));
@@ -490,6 +592,8 @@ void Controller::actionShowRadios(MenuItem& selected)
 		{
 			Json::Value radios = mPlayer.radios(selected.id());
 			selected.clearItems();
+			if (Config::backMenus())
+				selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 			for (int i = 0; i < radios.size(); i++)
 				selected.addItem(MenuItem(radios[i]["id"].asString(), MenuItem::RADIOMENU, radios[i]["name"].asString()));
 		} break;
@@ -497,6 +601,8 @@ void Controller::actionShowRadios(MenuItem& selected)
 		{
 			Json::Value radios = mPlayer.radios(mMenuScreen.pathItem(2).id(), selected.id());
 			selected.clearItems();
+			if (Config::backMenus())
+				selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 			for (int i = 0; i < radios.size(); i++)
 				selected.addItem(MenuItem(radios[i]["id"].asString(),
 								radios[i]["hasitems"].asInt() == 1 ? MenuItem::RADIOMENU : MenuItem::RADIO,
@@ -518,6 +624,8 @@ void Controller::actionShowArtistAlbums(MenuItem& selected)
 	mMenuScreen.progressOn();
 	Json::Value albums = mServer.albums(selected.id());
 	selected.clearItems();
+	if (Config::backMenus())
+		selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 	for (int i = 0; i < albums.size(); i++)
 		selected.addItem(MenuItem(albums[i]["id"].asString(), MenuItem::ALBUM, albums[i]["album"].asString(), true));
 	mMenuScreen.select();
@@ -529,6 +637,8 @@ void Controller::actionShowAlbumTracks(MenuItem& selected)
 	mMenuScreen.progressOn();
 	Json::Value tracks = mServer.tracks(selected.id());
 	selected.clearItems();
+	if (Config::backMenus())
+		selected.addItem(MenuItem("", MenuItem::BACK, "Back"));
 	for (int i = 0; i < tracks.size(); i++)
 		selected.addItem(MenuItem(tracks[i]["id"].asString(), MenuItem::TRACK, tracks[i]["title"].asString()));
 	mMenuScreen.select();

@@ -1,6 +1,7 @@
 /*
 	Server.cpp - Slimmer
-	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
+	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu): Original Implmentation
+	Copyright (C) 2021  Aaron White <w531t4@gmail.com>: Added Seek capability
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -154,6 +155,18 @@ Json::Value Server::playerStatus(const string& playerId, const bool fullPlaylist
 	params.append(query);
 
 	return mClient.CallMethod("slim.request", params);
+}
+
+void Server::setPlayerSeek(const string& playerId, const string& position)
+{
+	Json::Value params;
+	params.append(playerId);
+	Json::Value query;
+	query.append("time");
+	query.append(position);
+	params.append(query);
+
+	mClient.CallMethod("slim.request", params);
 }
 
 void Server::setPlayerVolume(const string& playerId, const string& volume)

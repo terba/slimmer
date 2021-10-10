@@ -1,6 +1,7 @@
 /*
 	Server.h - Slimmer
-	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
+	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu): Original Implmentation
+	Copyright (C) 2021  Aaron White <w531t4@gmail.com>: Added Seek capability
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -42,6 +43,7 @@ public:
 	const string& version() const { return mVersion; }
 
 	Json::Value playerStatus(const string& playerId, const bool fullPlaylist);
+	void setPlayerSeek(const string& playerId, const string& position);
 	void setPlayerVolume(const string& playerId, const string& volume);
 	void playPlaylistItem(const string& playerId, const string& index);
 	void removePlaylistItem(const string& playerId, const int index);

@@ -1,6 +1,7 @@
 /*
 	Config.cpp - Slimmer
-	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu)
+	Copyright (C) 2016-2017  Terényi, Balázs (terenyi@freemail.hu): Original Implmentation
+	Copyright (C) 2021  Aaron White <w531t4@gmail.com>: Added Seek capability
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -35,10 +36,12 @@ const short int Config::cRetryDelay = 1;
 const double Config::cPlayerStatusQueryInterval = 0.5;
 const double Config::cPlayerStatusQueryIntervalInStandby = 3;
 const double Config::cVolumeScreenHideDelay = 1;
+const double Config::cSeekScreenHideDelay = 2;
 const double Config::cMenuScreenHideDelay = 8;
 const double Config::cPopupHideDelay = 0.6;
 const double Config::cButtonLongPressTime = 0.4;
 const short int Config::cVolumeStep = 2;
+const short int Config::cSeekStep = 1;
 const short int Config::cNewMusicItems = 100;
 const short int Config::cTrackRestartLimit = 3;
 const double Config::cStandbyTimeout = 30;
@@ -51,8 +54,9 @@ string Config::mLcdHost;
 int Config::mLcdPort;
 string Config::mPlayerId;
 bool Config::mFixedVolume;
+bool Config::mBackMenus;
 int Config::mVolume;
-string Config::mInputDeviceFile;
+vector<string> Config::mInputDeviceFiles;
 string Config::mEncoding;
 int Config::mScrollSpeed;
 
@@ -71,8 +75,9 @@ int Config::processOptions(int argc, char* argv[])
 	ValueArg<int> lcdportArg("P", "lcdport", "lcdproc port (default: 13666)", false, 13666, "number");
 	ValueArg<string> macArg("m", "mac", "the player's MAC address (default: automatic, first interface)", false, "", "AA:BB:CC:DD:EE:FF");
 	SwitchArg fixedvolumeArg("f", "fixedvolume", "volume control disabled", false);
+	SwitchArg backmenusArg("b", "backmenus", "include selectable 'back' item in all menu navigation contexts", false);
 	ValueArg<int> volumeArg("o", "volume", "set volume on startup", false, -1, "0-100");
-	ValueArg<string> inputArg("i", "input", "keyboard input device file (default: /dev/input/event0)", false, "/dev/input/event0", "input device file");
+	ValueArg<string> inputArg("i", "input", "keyboard input device file(s). Use comma to delimit multiple input files. (default: /dev/input/event0)", false, "/dev/input/event0", "input device file");
 	ValueArg<string> encodingArg("e", "encoding", "the LCD's character encoding (default: ISO-8859-1)", false, "ISO-8859-1", "single-byte encoding");
 	ValueArg<int> scrollspeedArg("c", "scrollspeed", "text scrolling speed (default: 3)", false, 3, "0-10");
 
@@ -81,6 +86,7 @@ int Config::processOptions(int argc, char* argv[])
 	cmd.add(inputArg);
 	cmd.add(volumeArg);
 	cmd.add(fixedvolumeArg);
+	cmd.add(backmenusArg);
 	cmd.add(macArg);
 	cmd.add(lcdportArg);
 	cmd.add(lcdhostArg);
@@ -97,8 +103,22 @@ int Config::processOptions(int argc, char* argv[])
 	mLcdPort = lcdportArg.getValue();
 	mPlayerId = macArg.getValue();
 	mFixedVolume = fixedvolumeArg.getValue();
+	mBackMenus = backmenusArg.getValue();
 	mVolume = volumeArg.getValue();
-	mInputDeviceFile = inputArg.getValue();
+
+	// Save string to stream. Pull off chunks, broken up by ','
+	std::stringstream unparsed_data(inputArg.getValue());
+	while(unparsed_data.good()) {
+		std::string substr;
+		std::getline(unparsed_data, substr, ',');
+		mInputDeviceFiles.push_back(substr);
+	}
+	if (Config::verbose())
+	{
+		for (string const i_file : mInputDeviceFiles)
+			cout << "found device input file: " << i_file << endl;
+	}
+
 	mEncoding = encodingArg.getValue();
 	mScrollSpeed = scrollspeedArg.getValue();
 
